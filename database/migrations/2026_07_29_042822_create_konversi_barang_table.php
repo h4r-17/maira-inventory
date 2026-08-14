@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('konversi_barang', function (Blueprint $table) {
+            $table->id('id_konversi');
+            $table->foreignId('id_barang')->constrained('barang', 'id_barang')->onDelete('restrict')->cascadeOnUpdate();
+            $table->foreignId('id_satuan')->constrained('satuan', 'id_satuan')->onDelete('restrict')->cascadeOnUpdate();
+            $table->integer('nilai_konversi');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('konversi_barang');
+    }
+};
