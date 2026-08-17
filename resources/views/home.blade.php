@@ -192,30 +192,35 @@
         <div class="col-lg-6 mb-2">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Produksi Terbaru</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Pengajuan Terbaru</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>Batch</th>
+                                    <th>No Pengajuan</th>
                                     <th>Tanggal</th>
-                                    <th>Produk</th>
-                                    <th>Hasil</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($produksiTerbaru as $produksi)
+                                @forelse ($pengajuanTerbaru as $pengajuan)
                                     <tr>
-                                        <td>{{ $produksi->batch_produk }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($produksi->tanggal_produksi)->format('d M Y') }}</td>
-                                        <td>{{ $produksi->barangJadi->nama_produk ?? '-' }}</td>
-                                        <td>{{ number_format($produksi->hasil_produksi) }}</td>
+                                        <td>{{ $pengajuan->no_pengajuan }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($pengajuan->tanggal_pengajuan)->format('d M Y') }}
+                                        </td>
+                                        <td><span
+                                                class="badge badge
+                                      @if ($pengajuan->status == 'Disetujui') badge-success
+                                      @elseif($pengajuan->status == 'Ditolak') badge-danger
+                                      @elseif($pengajuan->status == 'Pending') badge-warning
+                                      @else badge-secondary @endif">{{ $pengajuan->status }}
+                                            </span></td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center">Belum ada data produksi.</td>
+                                        <td colspan="3" class="text-center">Belum ada data pengajuan.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

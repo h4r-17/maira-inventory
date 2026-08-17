@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\DetailPenerimaan;
 use App\Models\DetailPenolakan;
 use App\Models\Pembelian;
+use App\Models\Retur;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -89,13 +90,12 @@ class StoreReturRequest extends FormRequest
         ];
 
         if ($this->isMethod('POST')) {
-            $rules['no_retur'] =
-                'required|unique:retur,no_retur';
+            $rules['no_retur'] = 'required|unique:retur,no_retur';
+            $rules['tanggal_retur'] = 'required|date|after_or_equal:today';
         } else {
-            $rules['no_retur'] =
-                'required|unique:retur,no_retur,' .
-                $id_retur .
-                ',id_retur';
+            $retur = Retur::findOrFail($id_retur);
+            $rules['no_retur'] = 'required|unique:retur,no_retur,' . $id_retur . ',id_retur';
+            $rules['tanggal_retur'] = 'required|date|after_or_equal:' . $retur->tanggal_retur;
         }
 
         return $rules;

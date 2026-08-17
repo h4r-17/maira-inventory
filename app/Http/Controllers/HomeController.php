@@ -4,15 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\BarangJadi;
-use App\Models\Supplier;
-use App\Models\Pengajuan;
 use App\Models\Pembelian;
-use App\Models\Produksi;
 use App\Models\Penerimaan;
+use App\Models\Pengajuan;
+use App\Models\Produksi;
 use App\Models\Retur;
-use Illuminate\Http\Request;
+use App\Models\Supplier;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -45,11 +43,12 @@ class HomeController extends Controller
         $penerimaanTerbaru = Penerimaan::with('pembelian.supplier')->latest('tanggal_masuk')->take(5)->get();
         $produksiTerbaru = Produksi::with('barangJadi')->latest('tanggal_produksi')->take(5)->get();
         $pembelianTerbaru = Pembelian::with('supplier')->latest('tanggal_pembelian')->take(5)->get();
+        $pengajuanTerbaru = Pengajuan::latest('tanggal_pengajuan')->take(5)->get();
 
         // Data aktivitas terbaru (Gabungan dari beberapa transaksi terakhir)
         $aktivitasTerbaru = collect();
-        
-        foreach($penerimaanTerbaru as $p) {
+
+        foreach ($penerimaanTerbaru as $p) {
             $aktivitasTerbaru->push([
                 'tanggal' => $p->tanggal_masuk,
                 'jenis' => 'Penerimaan',
@@ -57,8 +56,8 @@ class HomeController extends Controller
                 'status' => 'Selesai'
             ]);
         }
-        
-        foreach($produksiTerbaru as $p) {
+
+        foreach ($produksiTerbaru as $p) {
             $aktivitasTerbaru->push([
                 'tanggal' => $p->tanggal_produksi,
                 'jenis' => 'Produksi',
@@ -66,8 +65,8 @@ class HomeController extends Controller
                 'status' => 'Selesai'
             ]);
         }
-        
-        foreach($returTerbaru as $r) {
+
+        foreach ($returTerbaru as $r) {
             $aktivitasTerbaru->push([
                 'tanggal' => $r->tanggal_retur,
                 'jenis' => 'Retur',
@@ -91,47 +90,47 @@ class HomeController extends Controller
         for ($i = 0; $i <= 5; $i++) {
             $month = Carbon::now()->addMonths($i);
             $labelsBulan[] = $month->translatedFormat('M Y');
-            
+
             // Produksi (Sum)
             $prod = Produksi::whereYear('tanggal_produksi', $month->year)
-                            ->whereMonth('tanggal_produksi', $month->month)
-                            ->sum('hasil_produksi');
+                ->whereMonth('tanggal_produksi', $month->month)
+                ->sum('hasil_produksi');
             $dataProduksi[] = (int) $prod;
 
             // Produksi (Count)
             $prodCount = Produksi::whereYear('tanggal_produksi', $month->year)
-                                 ->whereMonth('tanggal_produksi', $month->month)
-                                 ->count();
+                ->whereMonth('tanggal_produksi', $month->month)
+                ->count();
             $dataProduksiCount[] = $prodCount;
 
             // Pembelian
             $beli = Pembelian::whereYear('tanggal_pembelian', $month->year)
-                             ->whereMonth('tanggal_pembelian', $month->month)
-                             ->count();
+                ->whereMonth('tanggal_pembelian', $month->month)
+                ->count();
             $dataPembelian[] = $beli;
 
             // Penerimaan
             $terima = Penerimaan::whereYear('tanggal_masuk', $month->year)
-                                ->whereMonth('tanggal_masuk', $month->month)
-                                ->count();
+                ->whereMonth('tanggal_masuk', $month->month)
+                ->count();
             $dataPenerimaan[] = $terima;
 
             // Pengajuan
             $aju = Pengajuan::whereYear('tanggal_pengajuan', $month->year)
-                            ->whereMonth('tanggal_pengajuan', $month->month)
-                            ->count();
+                ->whereMonth('tanggal_pengajuan', $month->month)
+                ->count();
             $dataPengajuan[] = $aju;
 
             // Penolakan
             $tolak = \App\Models\Penolakan::whereYear('tanggal_penolakan', $month->year)
-                                          ->whereMonth('tanggal_penolakan', $month->month)
-                                          ->count();
+                ->whereMonth('tanggal_penolakan', $month->month)
+                ->count();
             $dataPenolakan[] = $tolak;
 
             // Retur
             $retur = Retur::whereYear('tanggal_retur', $month->year)
-                          ->whereMonth('tanggal_retur', $month->month)
-                          ->count();
+                ->whereMonth('tanggal_retur', $month->month)
+                ->count();
             $dataRetur[] = $retur;
         }
 
@@ -146,6 +145,7 @@ class HomeController extends Controller
             'penerimaanTerbaru',
             'produksiTerbaru',
             'pembelianTerbaru',
+            'pengajuanTerbaru',
             'aktivitasTerbaru',
             'labelsBulan',
             'dataProduksi',
@@ -158,4 +158,3 @@ class HomeController extends Controller
         ));
     }
 }
-

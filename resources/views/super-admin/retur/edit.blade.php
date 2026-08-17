@@ -24,7 +24,8 @@
                     <div class="form-group">
                         <label for="tanggal_retur" class="text-gray-900">Tanggal Retur</label>
                         <input type="date" class="form-control" name="tanggal_retur" id="tanggal_retur"
-                            value="{{ old('tanggal_retur', $retur->tanggal_retur) }}" required>
+                            value="{{ old('tanggal_retur', $retur->tanggal_retur) }}" min="{{ $retur->tanggal_retur }}"
+                            required>
                         @error('tanggal_retur')
                             <div class="form-text text-danger">{{ $message }}</div>
                         @enderror
@@ -168,8 +169,15 @@
                                 <input type="hidden" name="id_batch[]" value="${data.id_batch ?? ''}" >
                             </td>
                             <td>
-                                <span>${data.jumlah_retur ?? 0}</span>
-                                <input type="hidden" name="jumlah_retur[]" value="${data.jumlah_retur ?? 0}"></td>
+                                <input type="number" 
+                                    class="form-control jumlah-retur" 
+                                    name="jumlah_retur[]" 
+                                    min="1" 
+                                    step="1" 
+                                    value="${data.jumlah_retur ?? 0}" 
+                                    required>
+                                <input type="hidden" class="jumlah-ditolak" name="jumlah_ditolak[]" value="${data.jumlah_ditolak ?? 0}">
+                            </td>
                             <td>
                                 <span>${data.kode_satuan ?? ''}</span>
                                 <input type="hidden" name="id_satuan[]" value="${data.id_satuan ?? ''}">
@@ -270,6 +278,42 @@
             // 5. Event Hapus Baris
             $(document).on('click', '.hapus', function() {
                 $(this).closest('tr').remove();
+            });
+
+            // 6. Validasi Jumlah Retur
+            $(document).on('input', '.jumlah-retur', function() {
+                const row = $(this).closest('tr');
+                const jumlahRetur = parseInt($(this).val()) || 0;
+                const jumlahDitolak = parseInt(row.find('.jumlah-ditolak').val()) || 0;
+                const jenisSumber = $('#jenis_sumber_retur').val();
+
+                let maxRetur = jumlahDitolak;
+
+                // Jika dari Penolakan Produksi, batas maksimal adalah jumlah ditolak dibagi nilai konversi
+                if (jenisSumber === 'penolakan') {
+                    const nilaiKonversi = parseInt(row.find('input[name="nilai_konversi[]"]').val()) || 1;
+                    maxRetur = Math.floor(jumlahDitolak / nilaiKonversi);
+                }
+
+                // Validasi: Jumlah retur tidak boleh melebihi batas maksimal
+                if (jumlahRetur > maxRetur) {
+                    $('#error-empty-item').remove();
+                    const errors = $(`
+                        <div id="error-empty-item" class="alert alert-danger">
+                            <strong>Pemberitahuan!</strong>
+                            <ul class="mb-0 mt-2 pl-3">
+                                <li>Batas maksimal jumlah retur adalah <strong>${maxRetur}</strong></li>
+                            </ul>
+                        </div>
+                    `);
+                    $('#formRetur').prepend(errors);
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+
+                    $(this).val(maxRetur > 0 ? maxRetur : '');
+                }
             });
 
             const oldDetailPenolakan = @json(old('id_detail_penolakan', []));

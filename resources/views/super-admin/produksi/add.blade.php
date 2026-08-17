@@ -22,9 +22,31 @@
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label for="batch_produk" class="text-gray-900">Batch Produk</label>
-                        <input type="text" class="form-control batch-produk" id="batch_produk" name="batch_produk"
-                            placeholder="Masukkan batch produk" value="{{ old('batch_produk') }}" required>
+                        <label for="hasil_produksi" class="text-gray-900">Hasil Produksi</label>
+                        <input type="number" class="form-control" id="hasil_produksi" name="hasil_produksi"
+                            placeholder="Masukkan hasil produksi produk" min="1"
+                            value="{{ old('hasil_produksi') }}" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="batch_produk_tengah" class="text-gray-900">Batch Produk</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"
+                                    id="batch_prefix">{{ old('batch_prefix', 'PRODUK-') }}</span>
+                            </div>
+                            <input type="text" class="form-control" id="batch_produk_tengah"
+                                name="batch_produk_tengah" placeholder="Masukkan batch produk"
+                                value="{{ old('batch_produk_tengah') }}" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text"
+                                    id="batch_suffix">-{{ old('hasil_produksi', '0') }}</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="batch_produk" name="batch_produk" value="{{ old('batch_produk') }}">
+                        <input type="hidden" id="batch_prefix_input" name="batch_prefix"
+                            value="{{ old('batch_prefix', 'PRODUK-') }}">
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -36,14 +58,6 @@
                         @error('tanggal_produksi')
                             <div class="form-text text-danger">{{ $message }}</div>
                         @enderror
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="hasil_produksi" class="text-gray-900">Hasil Produksi</label>
-                        <input type="number" class="form-control" id="hasil_produksi" name="hasil_produksi"
-                            placeholder="Masukkan hasil produksi produk" min="1"
-                            value="{{ old('hasil_produksi') }}" required>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -69,8 +83,8 @@
     <div class="card shadow mb-5">
         <div class="card-header py-3 d-flex justify-content-between">
             <h6 class="m-0 font-weight-bold text-primary">Detail Produksi</h6>
-            <button type="button" class="btn btn-primary btn-sm" id="btnTambah"><i class="fas fa-plus"></i>
-                Tambah</button>
+            {{-- <button type="button" class="btn btn-primary btn-sm" id="btnTambah"><i class="fas fa-plus"></i>
+                Tambah</button> --}}
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -110,6 +124,14 @@
         $(document).ready(function() {
             const resepUrlBase = '{{ url('/get-resep') }}';
             const productRow = $('.form-row');
+
+            function updateBatchProduk() {
+                let prefix = $('#batch_prefix_input').val();
+                let tengah = $('#batch_produk_tengah').val();
+                let suffix = $('#hasil_produksi').val() ? '-' + $('#hasil_produksi').val() : '-0';
+
+                $('#batch_produk').val(prefix + tengah + suffix);
+            }
 
             // Konfigurasi Pagination Sisi Client
             const rowsPerPage = 5;
@@ -253,6 +275,9 @@
                     const jumlahKeluar = standarKuantitas * hasilProduksi;
                     row.find('.jumlah-keluar').val(jumlahKeluar);
                 });
+
+                $('#batch_suffix').text('-' + (hasilProduksi || '0'));
+                updateBatchProduk();
             });
 
             function renderRecipeRows(rows) {
@@ -306,29 +331,29 @@
                     $(this).val(ui.item.label);
                     productRow.find('.id_produk').val(ui.item.id);
                     productRow.find('.nama_produk').val(ui.item.label);
-                    $('#batch_produk').val(ui.item.batch + '-');
-                    $('#batch_produk').focus();
+
+                    $('#batch_prefix').text(ui.item.batch + '-');
+                    $('#batch_prefix_input').val(ui.item.batch + '-');
+                    updateBatchProduk();
+
+                    $('#batch_produk_tengah').focus();
                     loadRecipeByProduct(ui.item.id);
                     return false;
                 }
             }).on('input', function() {
                 productRow.find('.id_produk').val('');
                 productRow.find('.nama_produk').val($(this).val());
-                $('#batch_produk').val('');
+                $('#batch_prefix').text('KODE-');
+                $('#batch_prefix_input').val('KODE-');
+                $('#batch_produk_tengah').val('');
+                updateBatchProduk();
                 clearDetailRows();
             });
 
-            // event listener agar tidak bisa menghapus kode depan
-            $('#batch_produk').on('keydown', function(e) {
-                let val = $(this).val();
-                // Cari posisi tanda strip pertama
-                let dashIndex = val.indexOf('-');
-
-                // Jika tombol backspace ditekan dan kursor berada di area kode depan, gagalkan pencegahan hapus
-                if (e.keyCode === 8 && this.selectionStart <= (dashIndex + 1)) {
-                    e.preventDefault();
-                }
-            })
+            // event listener untuk update hidden batch_produk
+            $('#batch_produk_tengah').on('input', function() {
+                updateBatchProduk();
+            });
 
             $('#btnTambah').click(function() {
                 // PERUBAHAN: Otomatis lompat ke halaman terakhir saat user menambah baris manual secara mandiri
@@ -375,6 +400,9 @@
 
                 $('#error-empty-item').remove();
             });
+
+            // Initialize batch produk value
+            updateBatchProduk();
         });
     </script>
 @endpush

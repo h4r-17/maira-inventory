@@ -22,7 +22,7 @@
                     <div class="form-group">
                         <label for="tanggal_masuk" class="text-gray-900">Tanggal Masuk</label>
                         <input type="date" class="form-control" id="tanggal_masuk" name="tanggal_masuk"
-                            value="{{ old('tanggal_masuk') }}" required>
+                            value="{{ old('tanggal_masuk') }}" min="{{ date('Y-m-d') }}" required>
                         @error('tanggal_masuk')
                             <div class="form-text text-danger">{{ $message }}</div>
                         @enderror
@@ -363,7 +363,7 @@
                                 <input type="date"
                                     class="form-control"
                                     name="expired_date[]"
-                                    min="{{ date('Y-m-d', strtotime('+1 year')) }}"
+                                    min="{{ date('Y-m-d', strtotime('+4 months')) }}"
                                     ${Number(data.jumlah_masuk ?? 0) > 0 ? 'required' : ''}
                                     value="${escapeHtml(data.expired_date ?? '')}">
                             </td>

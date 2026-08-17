@@ -78,7 +78,7 @@ class LaporanController extends Controller
                 break;
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('direktur.pdf', $data)->setPaper('a4', 'landscape');
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('direktur.laporan.pdf', $data)->setPaper('a4', 'landscape');
 
         $title = ucfirst($jenis);
         return $pdf->stream('Laporan_' . $title . '_' . $startDate . '_' . $endDate . '.pdf');

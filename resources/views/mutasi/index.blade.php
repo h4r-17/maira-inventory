@@ -103,7 +103,7 @@
                             @if (count($mutasi) > 0)
                                 <tr>
                                     <td colspan="9" class="text-right font-weight-bold">Saldo Awal</td>
-                                    <td class="font-weight-bold">{{ $saldoAwal }}</td>
+                                    <td class="font-weight-bold">{{ number_format($saldoAwal) }}</td>
                                 </tr>
                             @endif
                             @php $saldo = $saldoAwal; @endphp
@@ -119,7 +119,7 @@
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}</td>
                                     <td>{{ $item->no_dokumen }}</td>
-                                    <td>{{ $item->kode_lot_supplier ?? '-' }}</td>
+                                    <td>{{ $item->kode_lot_supplier ?? ($item->kode_batch ?? '-') }}</td>
                                     <td>{{ $item->expired_date ? \Carbon\Carbon::parse($item->expired_date)->format('d-m-Y') : '-' }}
                                     </td>
                                     <td>
@@ -134,9 +134,11 @@
                                         @endif
                                     </td>
                                     <td>{{ $item->keterangan ?? '-' }}</td>
-                                    <td class="text-success">{{ $item->masuk > 0 ? $item->masuk : '-' }}</td>
-                                    <td class="text-danger">{{ $item->keluar > 0 ? $item->keluar : '-' }}</td>
-                                    <td>{{ $saldo }}</td>
+                                    <td class="text-success">
+                                        {{ $item->masuk > 0 ? number_format($item->masuk) : '-' }}</td>
+                                    <td class="text-danger">
+                                        {{ $item->keluar > 0 ? number_format($item->keluar) : '-' }}</td>
+                                    <td>{{ number_format($saldo) }}</td>
                                 </tr>
                             @endforeach
                             @if (count($mutasi) == 0)
@@ -149,7 +151,7 @@
                             <tfoot>
                                 <tr>
                                     <td colspan="9" class="text-right font-weight-bold">Saldo Akhir</td>
-                                    <td class="font-weight-bold">{{ $saldo }}</td>
+                                    <td class="font-weight-bold">{{ number_format($saldo) }}</td>
                                 </tr>
                             </tfoot>
                         @endif

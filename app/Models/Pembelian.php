@@ -32,6 +32,11 @@ class Pembelian extends Model
         return $this->hasMany(DetailPembelian::class, 'id_pembelian', 'id_pembelian');
     }
 
+    public function penerimaan()
+    {
+        return $this->hasMany(Penerimaan::class, 'id_pembelian', 'id_pembelian');
+    }
+
     public static function generateNoNota()
     {
         $today = now()->format('dmY');

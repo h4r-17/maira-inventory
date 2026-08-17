@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Pembelian;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,7 +25,6 @@ class StorePembelianRequest extends FormRequest
     {
         $id_pembelian = $this->route('pembelian');
         $rules = [
-            'tanggal_pembelian' => 'required|date|after_or_equal:today',
             'id_pengajuan' => 'required|exists:pengajuan,id_pengajuan',
             'id_supplier' => 'required',
             'cara_bayar' => 'required|in:Tunai,Net 14 Hari,Net 30 Hari',
@@ -38,14 +38,19 @@ class StorePembelianRequest extends FormRequest
             'kuantitas.*' => 'required|integer|min:1',
             'harga' => 'required|array|min:1',
             'harga.*' => 'required|numeric|min:1',
+            'diskon' => 'nullable|array',
+            'diskon.*' => 'nullable|numeric|min:0',
         ];
 
         if ($this->isMethod('POST')) {
             // Aturan untuk Store
             $rules['no_nota'] = 'required|unique:pembelian,no_nota';
+            $rules['tanggal_pembelian'] = 'required|date|after_or_equal:today';
         } else {
+            $pembelian = Pembelian::findOrFail($id_pembelian);
             // Aturan untuk Update (Mengabaikan ID pembelian yang sedang diedit)
             $rules['no_nota'] = 'required|unique:pembelian,no_nota,' . $id_pembelian . ',id_pembelian';
+            $rules['tanggal_pembelian'] = 'required|date|after_or_equal:' . $pembelian->tanggal_pembelian;
         }
 
         return $rules;
@@ -94,6 +99,9 @@ class StorePembelianRequest extends FormRequest
             'harga.*.required' => 'Harga pada baris ke-:position wajib diisi',
             'harga.*.numeric' => 'Harga pada baris ke-:position harus berupa angka',
             'harga.*.min' => 'Harga pada baris ke-:position minimal :min',
+
+            'diskon.*.numeric' => 'Diskon pada baris ke-:position harus berupa angka',
+            'diskon.*.min' => 'Diskon pada baris ke-:position tidak boleh kurang dari :min',
         ];
     }
 }

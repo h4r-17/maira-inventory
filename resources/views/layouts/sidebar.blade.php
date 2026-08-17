@@ -1,11 +1,37 @@
-<ul class="navbar-nav bg-gradient-dark sidebar sidebar-dark accordion" id="accordionSidebar">
+<style>
+    /* Custom Scrollbar for Sidebar untuk mencegah terpotong */
+    #accordionSidebar::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    #accordionSidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #accordionSidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+    }
+
+    #accordionSidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Jika yang dimaksud adalah arrow (panah) sebelah kanan agar ikut berdekatan dengan teks */
+    .custom-arrow-link::after {
+        position: static !important;
+        margin-left: 40px;
+    }
+</style>
+<ul class="navbar-nav bg-gradient-dark sidebar sidebar-dark accordion" id="accordionSidebar"
+    style="position: sticky; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden;">
     @php
         $homeActive = request()->is('home');
         $mutasiActive = request()->is('mutasi*');
         $barangActive = request()->is(
             'satuan*',
-            'barang',
-            'barang/*',
+            'barang*',
+            'barang-jadi*',
             'kode-batch*',
             'resep-produksi*',
             'konversi-barang*',
@@ -19,6 +45,7 @@
         $returActive = request()->is('retur*');
         $laporanActive = request()->is('laporan*');
         $produkActive = request()->is('barang-jadi*');
+        $userActive = request()->is('users*');
     @endphp
 
     <!-- Sidebar - Brand -->
@@ -26,11 +53,11 @@
         <div class="sidebar-brand-icon">
             <img src="{{ asset('images/logowell.png') }}" alt="Logo" srcset="" width="40" height="40">
         </div>
-        <div class="sidebar-brand-text mx-3">Inventory Maira</div>
+        <div class="sidebar-brand-text mx-2">Maira Inventory</div>
     </a>
 
     <!-- Divider -->
-    <hr class="sidebar-divider my-0">
+    {{-- <hr class="sidebar-divider my-0"> --}}
 
     <!-- Nav Item - Dashboard -->
     <li class="nav-item {{ $homeActive ? 'active' : '' }}">
@@ -55,6 +82,14 @@
         </li>
     @endif
 
+    @if (auth()->user()->hasRole(['Super Admin', 'Direktur']))
+        <li class="nav-item {{ $userActive ? 'active' : '' }}">
+            <a class="nav-link {{ $userActive ? 'active' : '' }}" href="{{ route('users.index') }}">
+                <i class="fas fa-user fa-sm fa-fw"></i>
+                <span>Pengguna</span></a>
+        </li>
+    @endif
+
     <!-- Divider -->
     @if (auth()->user()->hasRole(['Admin Gudang']))
         <hr class="sidebar-divider">
@@ -68,38 +103,32 @@
     <!-- Nav Item - Barang -->
     @if (auth()->user()->hasRole(['Admin Gudang']))
         <li class="nav-item {{ $barangActive ? 'active' : '' }}">
-            <a class="nav-link {{ $barangActive ? '' : 'collapsed active' }}" href="#" data-toggle="collapse"
-                data-target="#collapseTwo" aria-expanded="{{ $barangActive ? 'true' : 'false' }}"
-                aria-controls="collapseTwo">
-                <i class="fa-solid fa-box-archive"></i>
+            <a class="nav-link {{ $barangActive ? '' : 'collapsed active' }} custom-arrow-link" href="#"
+                data-toggle="collapse" data-target="#collapseTwo"
+                aria-expanded="{{ $barangActive ? 'true' : 'false' }}" aria-controls="collapseTwo"
+                style="display: flex; align-items: center;">
+                <i class="fa-solid fa-box-archive" style="width: auto; margin-right: 8px;"></i>
                 <span>Bahan Baku</span>
             </a>
             <div id="collapseTwo" class="collapse {{ $barangActive ? 'show' : '' }}" aria-labelledby="headingTwo"
                 data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
                     <h6 class="collapse-header text-gray-600">Daftar Master</h6>
-                    <a class="collapse-item {{ request()->is('barang') ? 'active' : '' }}"
-                        href="{{ route('barang.index') }}">Bahan Baku</a>
                     <a class="collapse-item {{ request()->is('satuan*') ? 'active' : '' }}"
                         href="{{ route('satuan.index') }}">Satuan</a>
-                    <a class="collapse-item {{ request()->is('kode-batch*') ? 'active' : '' }}"
-                        href="{{ route('kode-batch.index') }}">Kode
-                        Batch</a>
+                    <a class="collapse-item {{ request()->is('barang') ? 'active' : '' }}"
+                        href="{{ route('barang.index') }}">Bahan Baku</a>
+                    <a class="collapse-item {{ request()->is('barang-jadi*') ? 'active' : '' }}"
+                        href="{{ route('barang-jadi.index') }}">Produk</a>
                     <a class="collapse-item {{ request()->is('resep-produksi*') ? 'active' : '' }}"
                         href="{{ route('resep-produksi.index') }}">Resep Produksi</a>
                     <a class="collapse-item {{ request()->is('konversi-barang*') ? 'active' : '' }}"
-                        href="{{ route('konversi-barang.index') }}">Konversi Bahan Baku</a>
+                        href="{{ route('konversi-barang.index') }}">Konversi</a>
+                    <a class="collapse-item {{ request()->is('kode-batch*') ? 'active' : '' }}"
+                        href="{{ route('kode-batch.index') }}">Kode
+                        Batch</a>
                 </div>
             </div>
-        </li>
-    @endif
-
-    <!-- Nav Item - Produk -->
-    @if (auth()->user()->hasRole(['Admin Gudang']))
-        <li class="nav-item {{ $produkActive ? 'active' : '' }}">
-            <a class="nav-link {{ $produkActive ? 'active' : '' }}" href="{{ route('barang-jadi.index') }}">
-                <i class="fa-solid fa-bread-slice"></i>
-                <span>Produk</span></a>
         </li>
     @endif
 
@@ -238,8 +267,8 @@
     <hr class="sidebar-divider d-none d-md-block">
 
     <!-- Sidebar Toggler (Sidebar) -->
-    <div class="text-center d-none d-md-inline">
-        <button class="rounded-circle border-0" id="sidebarToggle"></button>
-    </div>
+    {{-- <div class="text-center d-none d-md-inline">
+             <button class="rounded-circle border-0" id="sidebarToggle"></button>
+         </div> --}}
 
 </ul>

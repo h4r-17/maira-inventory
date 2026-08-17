@@ -31,7 +31,7 @@ class Penerimaan extends Model
 
     public function retur()
     {
-        return $this->belongsTo(Retur::class, 'id_retur', 'id_retur');
+        return $this->hasOne(Retur::class, 'id_penerimaan', 'id_penerimaan');
     }
 
     public static function generateNoRegis()

@@ -38,7 +38,6 @@
                     <div class="form-group">
                         <label for="tanggal_penolakan" class="text-gray-900">Tanggal Penolakan</label>
                         <input type="date" class="form-control" id="tanggal_penolakan" name="tanggal_penolakan"
-                            min="{{ \Carbon\Carbon::now()->translatedFormat('Y-m-d') }}"
                             value="{{ old('tanggal_penolakan', $penolakan->tanggal_penolakan) }}" required>
                         @error('tanggal_penolakan')
                             <div class="form-text text-danger">{{ $message }}</div>
@@ -145,6 +144,7 @@
                         row.find('.kode-batch-value').val(ui.item.kode_batch);
 
                         row.find('.jumlah-ditolak').attr('max', ui.item.sisa_persediaan);
+                        row.find('.jumlah-ditolak').attr('data-konversi', ui.item.nilai_konversi);
                         return false;
                     }
 
@@ -213,10 +213,11 @@
                                     <td>
                                         <input type="number"
                                             class="form-control jumlah-ditolak"
-                                            min="1000"
+                                            min="1"
                                             name="jumlah_ditolak[]"
                                             placeholder="Masukkan jumlah ditolak"
                                             value="${data.jumlah_ditolak ?? ''}"
+                                            data-konversi="${data.nilai_konversi ?? 1}"
                                             required>
                                     </td>
                                     <td>
@@ -295,6 +296,8 @@
                 existingDetails.forEach(function(item) {
                     const batch = item.batch || null;
                     const barang = batch && batch.barang ? batch.barang : null;
+                    const konversiBarang = barang && barang.konversi_barang ? barang.konversi_barang : null;
+                    const nilaiKonversi = konversiBarang ? konversiBarang.nilai_konversi : 1;
 
                     addRow({
                         id_batch: batch ? batch.id_batch : '',
@@ -303,7 +306,8 @@
                         nama_barang: barang ? barang.nama_barang : '',
                         jumlah_ditolak: item.jumlah_ditolak ?? '',
                         alasan_penolakan: item.alasan_penolakan ?? '',
-                        deskripsi: item.deskripsi ?? ''
+                        deskripsi: item.deskripsi ?? '',
+                        nilai_konversi: nilaiKonversi
                     });
                 });
             }
@@ -311,15 +315,42 @@
 
         // 5. VALIDASI KOSONG SEBELUM SUBMIT
         $('#formPenolakan').submit(function(e) {
+            let isValid = true;
+            let errorMessage = '';
+
             if ($('#detailTableBody tr').length == 0) {
-                $('#error-empty-item').remove();
+                isValid = false;
+                errorMessage += '<li>Minimal satu bahan baku penolakan harus ditambahkan.</li>';
+            }
+
+            // Validasi kelipatan konversi jika status = Retur
+            const statusKeputusan = $('#status').val();
+            if (statusKeputusan === 'Retur') {
+                $('#detailTableBody tr').each(function() {
+                    let qty = parseFloat($(this).find('.jumlah-ditolak').val());
+                    let konversi = parseFloat($(this).find('.jumlah-ditolak').attr('data-konversi')) || 1;
+                    let namaBarang = $(this).find('.nama-barang').val();
+
+                    if (qty > 0 && konversi > 0 && qty % konversi !== 0) {
+                        isValid = false;
+                        errorMessage +=
+                            `<li>Jumlah ditolak untuk <b>${namaBarang}</b> harus kelipatan dari nilai konversi (<b>${konversi}</b>).</li>`;
+                    }
+                });
+            }
+
+            $('#error-empty-item').remove();
+            if (!isValid) {
                 let $errors = $(
-                    '<div id="error-empty-item" class="alert alert-danger"><strong>Data belum valid!</strong><ul class="mb-0 mt-2 pl-3"><li>Minimal satu bahan baku penolakan harus ditambahkan.</li></ul></div>'
+                    '<div id="error-empty-item" class="alert alert-danger"><strong>Data belum valid!</strong><ul class="mb-0 mt-2 pl-3">' +
+                    errorMessage + '</ul></div>'
                 );
                 $(this).prepend($errors);
+                // Scroll ke error message
+                $('html, body').animate({
+                    scrollTop: $("#error-empty-item").offset().top - 20
+                }, 200);
                 return false;
-            } else {
-                $('#error-empty-item').remove();
             }
         });
     </script>

@@ -103,7 +103,7 @@
         </div>
     </div>
     <!-- Modal Disetujui -->
-    <div class="modal fade" id="accept{{ $item->id_retur }}" tabindex="-1" aria-labelledby="exampleModalLabel"
+    {{-- <div class="modal fade" id="accept{{ $item->id_retur }}" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
             <form action="{{ route('retur.accept', $item->id_retur) }}" method="POST" class="modal-content">
@@ -122,9 +122,9 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div> --}}
     <!-- Modal Ditolak -->
-    <div class="modal fade" id="reject{{ $item->id_retur }}" tabindex="-1" aria-labelledby="exampleModalLabel"
+    {{-- <div class="modal fade" id="reject{{ $item->id_retur }}" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
             <form action="{{ route('retur.reject', $item->id_retur) }}" method="POST" class="modal-content">
@@ -143,6 +143,6 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div> --}}
 @endforeach
 @endsection

@@ -15,17 +15,11 @@
                             <input type="text" class="form-control w-25" id="kode_barang"
                                 placeholder="Masukan kode bahan baku" name="kode_barang" minlength="3" maxlength="30"
                                 value="{{ old('kode_barang', $kode_barang) }}" readonly>
-                            @error('kode_barang')
-                                <div class="form-text text-danger">{{ $message }}</div>
-                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="nama_barang" class="text-gray-900">Nama Bahan Baku</label>
                             <input type="text" class="form-control w-25" id="nama_barang" minlength="3" maxlength="50"
                                 placeholder="Masukan nama bahan baku" name="nama_barang" value="{{ old('nama_barang') }}">
-                            @error('nama_barang')
-                                <div class="form-text text-danger">{{ $message }}</div>
-                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="id_satuan" class="text-gray-900">Satuan</label>
@@ -39,27 +33,13 @@
                                     </option>
                                 @endforeach
                             </select>
-                            @error('id_satuan')
-                                <div class="form-text text-danger">{{ $message }}</div>
-                            @enderror
                         </div>
                         <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i>
                             Tambah</button>
-                        <button type="reset" class="btn btn-warning" onclick="this.form.reset()"
-                            id="resetBtn">Reset</button>
                         <a href="{{ route('barang.index') }}" class="btn btn-secondary">Kembali</a>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-    @push('scripts')
-        <script>
-            const resetBtn = document.getElementById('resetBtn');
-
-            form.addEventListener('reset', () => {
-                setTimeout(checkFormChanges, 0);
-            });
-        </script>
-    @endpush
 @endsection

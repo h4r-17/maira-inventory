@@ -24,6 +24,7 @@
                         <th>Supplier</th>
                         <th>Status</th>
                         <th>Aksi</th>
+                        <th>Kontrol</th>
                         {{-- <th>Kontrol</th> --}}
                     </tr>
                 </thead>
@@ -46,33 +47,31 @@
                             <td>
                                 <a href="{{ route('retur.show', $item->id_retur) }}" class="btn btn-sm btn-info"><i
                                         class="fa-solid fa-eye"></i></a>
-                                @if ($item->status != 'Diretur' && $item->status != 'Ditolak')
-                                    <a href="{{ route('retur.edit', $item->id_retur) }}"
-                                        class="btn btn-sm btn-warning"><i class="fa-solid fa-pen-to-square"></i></a>
-                                @endif
+                                <a href="{{ route('retur.edit', $item->id_retur) }}" class="btn btn-sm btn-warning"><i
+                                        class="fa-solid fa-pen-to-square"></i></a>
                                 <a href="{{ route('retur.pdf', $item->id_retur) }}" target="_blank"
                                     class="btn btn-sm btn-info"><i class="fa-solid fa-print"></i>
                                 </a>
                                 <!-- Button trigger modal -->
-                                @if ($item->status != 'Diretur' && $item->status != 'Ditolak')
-                                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
-                                        data-target="#hapus{{ $item->id_retur }}">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                @endif
+                                <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
+                                    data-target="#hapus{{ $item->id_retur }}">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
                             </td>
-                            {{-- <td>
-                                <!-- Button trigger modal -->
+                            <td>
                                 <button type="button" class="btn btn-success btn-sm" data-toggle="modal"
                                     data-target="#accept{{ $item->id_retur }}">
                                     <i class="fa-solid fa-check"></i>
                                 </button>
-                                <!-- Button trigger modal -->
+                                <button type="button" class="btn btn-warning btn-sm" data-toggle="modal"
+                                    data-target="#pending{{ $item->id_retur }}">
+                                    <i class="fa-solid fa-exclamation"></i>
+                                </button>
                                 <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
                                     data-target="#reject{{ $item->id_retur }}">
                                     <i class="fa-solid fa-times"></i>
                                 </button>
-                            </td> --}}
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -140,6 +139,29 @@
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Tutup</button>
                     <button class="btn btn-danger" type="submit">Ya</button>
+                </div>
+            </form>
+        </div>
+    </div>\
+    <!-- Modal Pending -->
+    <div class="modal fade" id="pending{{ $item->id_retur }}" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{ route('retur.pending', $item->id_retur) }}" method="POST" class="modal-content">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title text-gray-900" id="exampleModalLabel"><strong>Konfirmasi
+                            Pending</strong>
+                    </h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
+                    </button>
+                </div>
+                <div class="modal-body text-gray-900">Apakah anda yakin ingin mengubah status retur ini menjadi
+                    pending?</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Tutup</button>
+                    <button class="btn btn-warning" type="submit">Ya</button>
                 </div>
             </form>
         </div>

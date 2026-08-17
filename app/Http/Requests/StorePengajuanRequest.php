@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Pengajuan;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,7 +25,6 @@ class StorePengajuanRequest extends FormRequest
     {
         $id_pengajuan = $this->route('id_pengajuan');
         $rules = [
-            'tanggal_pengajuan' => 'required|date|after_or_equal:today',
             'id_barang' => 'required|array|min:1',
             'id_barang.*' => 'required|exists:barang,id_barang',
             'id_satuan' => 'required|array|min:1',
@@ -40,9 +40,12 @@ class StorePengajuanRequest extends FormRequest
         if ($this->isMethod('POST')) {
             // Aturan untuk Store
             $rules['no_pengajuan'] = 'required|unique:pengajuan,no_pengajuan';
+            $rules['tanggal_pengajuan'] = 'required|date|after_or_equal:today';
         } else {
+            $pengajuan = Pengajuan::findOrFail($id_pengajuan);
             // Aturan untuk Update (Mengabaikan ID pengajuan yang sedang diedit)
             $rules['no_pengajuan'] = 'required|unique:pengajuan,no_pengajuan,' . $id_pengajuan . ',id_pengajuan';
+            $rules['tanggal_pengajuan'] = 'required|date|after_or_equal:' . $pengajuan->tanggal_pengajuan;
         }
 
         return $rules;
@@ -69,7 +72,7 @@ class StorePengajuanRequest extends FormRequest
 
             // pesan untuk item array (pake :position biar tau baris berapa)
             'id_barang.*.required' => 'Bahan baku pada baris ke-:position wajib dipilih dari daftar saran',
-            'id_barang.*.exists' => 'Bahan baku pada baris ke-:position tidak ditemukan dalam daftar bahan baku',
+            'id_barang.*.exists' => 'Bahan baku pada baris ke-:position tidak ditemukan dalam daftar bahan baku atau konversi satuan bahan baku',
 
             'id_satuan.*.required' => 'Satuan pada baris ke-:position harus diisi',
             'id_satuan.*.exists' => 'Satuan pada baris ke-:position tidak ditemukan dalam daftar satuan',
@@ -85,4 +88,5 @@ class StorePengajuanRequest extends FormRequest
             'deskripsi.*.max' => 'Deskripsi pada baris ke-:position maksimal 255 karakter',
         ];
     }
+
 }

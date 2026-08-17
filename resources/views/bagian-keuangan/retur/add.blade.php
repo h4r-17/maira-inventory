@@ -23,7 +23,7 @@
                     <div class="form-group">
                         <label for="tanggal_retur" class="text-gray-900">Tanggal Retur</label>
                         <input type="date" class="form-control" name="tanggal_retur" id="tanggal_retur"
-                            value="{{ old('tanggal_retur') }}" required>
+                            value="{{ old('tanggal_retur') }}" min="{{ date('Y-m-d') }}" required>
                         @error('tanggal_retur')
                             <div class="form-text text-danger">{{ $message }}</div>
                         @enderror
@@ -107,8 +107,8 @@
         <div class="card">
             <div class="card-header py-3 d-flex justify-content-between">
                 <h6 class="m-0 font-weight-bold text-primary">Detail Retur</h6>
-                <button type="button" class="btn btn-primary btn-sm" id="btnTambah"><i class="fas fa-plus"></i>
-                    Tambah</button>
+                {{-- <button type="button" class="btn btn-primary btn-sm" id="btnTambah"><i class="fas fa-plus"></i>
+                    Tambah</button> --}}
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -260,7 +260,7 @@
                 <td>
                     <input type="text"
                         class="form-control"
-                        name="deskripsi_detail[]"
+                        name="deskripsi[]"
                         placeholder="Jika ada"
                         value="${data.deskripsi ?? ''}">
                 </td>
@@ -440,7 +440,8 @@
                                 kode_satuan: item.kode_satuan ?? '',
                                 nilai_konversi: item.nilai_konversi ?? '',
                                 expired_date: item.expired_date ?? '',
-                                deskripsi: item.deskripsi ?? ''
+                                deskripsi: item.deskripsi ?? '',
+                                jumlah_retur: item.jumlah_ditolak ?? 0
                             });
                         });
                     },
@@ -497,8 +498,10 @@
                                 nama_barang: item.nama_barang ?? '',
                                 batch_barang: item.batch_barang ?? '',
                                 jumlah_ditolak: item.jumlah_ditolak ?? 0,
-                                // Jumlah retur sengaja dikosongkan agar user menentukan sendiri
-                                jumlah_retur: '',
+                                // Jumlah retur dihitung dari jumlah ditolak dibagi nilai konversi
+                                jumlah_retur: (item.jumlah_ditolak && item
+                                    .nilai_konversi) ? (item.jumlah_ditolak / item
+                                    .nilai_konversi) : (item.jumlah_ditolak ?? 0),
                                 id_satuan: item.id_satuan ?? '',
                                 kode_satuan: item.kode_satuan ?? '',
                                 nilai_konversi: item.nilai_konversi ?? '',
@@ -527,17 +530,36 @@
             /*VALIDASI JUMLAH RETUR*/
             $(document).on('input', '.jumlah-retur', function() {
                 const row = $(this).closest('tr');
-                const jumlahRetur =
-                    parseInt($(this).val()) || 0;
-                const jumlahDitolak =
-                    parseInt(
-                        row.find('.jumlah-ditolak').val()
-                    ) || 0;
+                const jumlahRetur = parseInt($(this).val()) || 0;
+                const jumlahDitolak = parseInt(row.find('.jumlah-ditolak').val()) || 0;
+                const jenisSumber = $('#jenis_sumber_retur').val();
 
-                // Validasi: Jumlah retur tidak boleh melebihi jumlah yang ditolak
-                if (jumlahRetur > jumlahDitolak) {
-                    alert('Jumlah retur tidak boleh melebihi jumlah yang ditolak.');
-                    $(this).val('');
+                let maxRetur = jumlahDitolak;
+
+                // Jika dari Penolakan Produksi, batas maksimal adalah jumlah ditolak dibagi nilai konversi
+                if (jenisSumber === 'penolakan') {
+                    const nilaiKonversi = parseInt(row.find('input[name="nilai_konversi[]"]').val()) || 1;
+                    maxRetur = Math.floor(jumlahDitolak / nilaiKonversi);
+                }
+
+                // Validasi: Jumlah retur tidak boleh melebihi batas maksimal
+                if (jumlahRetur > maxRetur) {
+                    $('#error-empty-item').remove();
+                    const errors = $(`
+                        <div id="error-empty-item" class="alert alert-danger">
+                            <strong>Pemberitahuan!</strong>
+                            <ul class="mb-0 mt-2 pl-3">
+                                <li>Batas maksimal jumlah retur adalah <strong>${maxRetur}</strong></li>
+                            </ul>
+                        </div>
+                    `);
+                    $('#formRetur').prepend(errors);
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+
+                    $(this).val(maxRetur > 0 ? maxRetur : '');
                 }
             });
 
@@ -553,7 +575,7 @@
             const oldJumlahRetur = @json(old('jumlah_retur', []));
             const oldNilaiKonversi = @json(old('nilai_konversi', []));
             const oldExpiredDate = @json(old('expired_date', []));
-            const oldDeskripsi = @json(old('deskripsi_detail', []));
+            const oldDeskripsi = @json(old('deskripsi', []));
 
             /*RESTORE OLD INPUT*/
             if (oldBarang.length > 0) {

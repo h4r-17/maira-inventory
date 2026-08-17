@@ -74,14 +74,6 @@ class MutasiController extends Controller
             ->where('produksi.tanggal_produksi', '<', $startDate)
             ->sum('detail_produksi.jumlah_keluar');
 
-        // Keluar before start date (Retur)
-        $keluarReturAwal = DB::table('detail_retur')
-            ->join('retur', 'detail_retur.id_retur', '=', 'retur.id_retur')
-            ->join('batch_barang', 'detail_retur.id_batch', '=', 'batch_barang.id_batch')
-            ->where('batch_barang.id_barang', $id_barang)
-            ->where('retur.tanggal_retur', '<', $startDate)
-            ->sum('detail_retur.jumlah_retur');
-
         // Keluar before start date (Penolakan)
         $keluarPenolakanAwal = DB::table('detail_penolakan')
             ->join('penolakan', 'detail_penolakan.id_penolakan', '=', 'penolakan.id_penolakan')
@@ -90,7 +82,7 @@ class MutasiController extends Controller
             ->where('penolakan.tanggal_penolakan', '<', $startDate)
             ->sum('detail_penolakan.jumlah_ditolak');
 
-        $saldoAwal = $masukAwal - ($keluarProduksiAwal + $keluarReturAwal + $keluarPenolakanAwal);
+        $saldoAwal = $masukAwal - ($keluarProduksiAwal + $keluarPenolakanAwal);
 
         // --- Get Transactions in Date Range ---
         // Penerimaan
@@ -101,6 +93,7 @@ class MutasiController extends Controller
                 DB::raw("'Penerimaan' as tipe"),
                 'detail_penerimaan.deskripsi as keterangan',
                 'batch_barang.kode_lot_supplier as kode_lot_supplier',
+                'batch_barang.kode_batch as kode_batch',
                 'batch_barang.expired_date as expired_date',
                 DB::raw('(detail_penerimaan.jumlah_masuk * COALESCE(detail_penerimaan.rasio_konversi, 1)) as masuk'),
                 DB::raw("0 as keluar")
@@ -118,6 +111,7 @@ class MutasiController extends Controller
                 DB::raw("'Produksi' as tipe"),
                 'detail_produksi.deskripsi as keterangan',
                 'batch_barang.kode_lot_supplier as kode_lot_supplier',
+                'batch_barang.kode_batch as kode_batch',
                 'batch_barang.expired_date as expired_date',
                 DB::raw("0 as masuk"),
                 'detail_produksi.jumlah_keluar as keluar'
@@ -133,11 +127,12 @@ class MutasiController extends Controller
                 'retur.tanggal_retur as tanggal',
                 'retur.no_retur as no_dokumen',
                 DB::raw("'Retur' as tipe"),
-                DB::raw("'Retur Barang' as keterangan"),
+                'detail_retur.deskripsi as keterangan',
                 'batch_barang.kode_lot_supplier as kode_lot_supplier',
+                'batch_barang.kode_batch as kode_batch',
                 'batch_barang.expired_date as expired_date',
                 DB::raw("0 as masuk"),
-                DB::raw('(detail_retur.jumlah_retur * COALESCE(detail_retur.nilai_konversi, 1)) as keluar')
+                DB::raw('NULL as keluar')
             )
             ->join('retur', 'detail_retur.id_retur', '=', 'retur.id_retur')
             ->join('batch_barang', 'detail_retur.id_batch', '=', 'batch_barang.id_batch')
@@ -152,6 +147,7 @@ class MutasiController extends Controller
                 DB::raw("'Penolakan' as tipe"),
                 'detail_penolakan.deskripsi as keterangan',
                 'batch_barang.kode_lot_supplier as kode_lot_supplier',
+                'batch_barang.kode_batch as kode_batch',
                 'batch_barang.expired_date as expired_date',
                 DB::raw("0 as masuk"),
                 'detail_penolakan.jumlah_ditolak as keluar'
@@ -164,8 +160,8 @@ class MutasiController extends Controller
         // Combine all using union
         $transactions = $penerimaan
             ->unionAll($produksi)
-            ->unionAll($retur)
             ->unionAll($penolakan)
+            ->unionAll($retur)
             ->orderBy('tanggal', 'asc')
             ->get();
 

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Mutasi - {{ $barang->nama_barang }}</title>
+    <title>Mutasi {{ $barang->nama_barang }}</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -117,8 +117,8 @@
         <tbody>
             @if (count($mutasi) > 0)
                 <tr>
-                    <td colspan="9" class="text-right font-weight-bold">Saldo Awal</td>
-                    <td class="font-weight-bold">{{ $saldoAwal }}</td>
+                    <td colspan="9" class="text-right font-bold">Saldo Awal</td>
+                    <td class="font-bold">{{ number_format($saldoAwal) }}</td>
                 </tr>
             @endif
             @php $saldo = $saldoAwal; @endphp
@@ -134,15 +134,17 @@
                     <td class="text-center">{{ $loop->iteration }}</td>
                     <td class="text-center">{{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}</td>
                     <td class="text-center">{{ $item->no_dokumen }}</td>
-                    <td class="text-center">{{ $item->kode_lot_supplier ?? '-' }}</td>
+                    <td class="text-center">{{ $item->kode_lot_supplier ?? ($item->kode_batch ?? '-') }}</td>
                     <td class="text-center">
                         {{ $item->expired_date ? \Carbon\Carbon::parse($item->expired_date)->format('d-m-Y') : '-' }}
                     </td>
                     <td class="text-center">{{ $item->tipe }}</td>
-                    <td>{{ $item->keterangan ?? '-' }}</td>
-                    <td class="text-center">{{ $item->masuk > 0 ? $item->masuk : '-' }}</td>
-                    <td class="text-center">{{ $item->keluar > 0 ? $item->keluar : '-' }}</td>
-                    <td class="text-center">{{ $saldo }}</td>
+                    <td>{{ $item->keterangan ?? '' }}</td>
+                    <td class="text-center">
+                        {{ $item->masuk > 0 ? number_format($item->masuk) : '' }}</td>
+                    <td class="text-center">
+                        {{ $item->keluar > 0 ? number_format($item->keluar) : '' }}</td>
+                    <td class="text-center">{{ number_format($saldo) }}</td>
                 </tr>
             @empty
                 <tr>
@@ -154,7 +156,7 @@
             <tfoot>
                 <tr>
                     <td colspan="9" class="text-right font-bold">Saldo Akhir</td>
-                    <td class="font-bold text-center">{{ $saldo }}</td>
+                    <td class="font-bold text-center">{{ number_format($saldo) }}</td>
                 </tr>
             </tfoot>
         @endif

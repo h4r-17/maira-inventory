@@ -35,6 +35,11 @@ class Retur extends Model
 
     public function penerimaan()
     {
+        return $this->belongsTo(Penerimaan::class, 'id_penerimaan', 'id_penerimaan');
+    }
+
+    public function penerimaanPengganti()
+    {
         return $this->hasOne(Penerimaan::class, 'id_retur', 'id_retur');
     }
 

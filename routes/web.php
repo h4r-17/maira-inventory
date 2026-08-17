@@ -35,8 +35,9 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // manajemen user
-Route::middleware(['auth', 'role:Super Admin'])->group(function () {
+Route::middleware(['auth', 'role:Super Admin,Direktur'])->group(function () {
     Route::resource('users', UserController::class);
+    Route::post('/retur/{id_retur}/pending', [ReturController::class, 'pending'])->name('retur.pending');
     Route::post('/pengajuan/{id_pengajuan}/pending', [PengajuanController::class, 'pending'])->name('pengajuan.pending');
 });
 

@@ -71,6 +71,8 @@
     </form>
     @push('scripts')
         <script>
+            const konversiBarang = @json($konversi_barang);
+
             $(document).ready(function() {
                 const satuanList = @json($data_satuan);
                 const existingDetails = @json($pengajuan->detailPengajuan);
@@ -175,15 +177,43 @@
             });
 
             $('#formPengajuan').submit(function(e) {
+                let isValid = true;
+                let errorMessage = '';
+
                 if ($('#detailTableBody tr').length == 0) {
-                    $('#error-empty-item').remove(); // hapus pesan error lewat id
+                    isValid = false;
+                    errorMessage += '<li>Minimal satu bahan baku harus ditambahkan.</li>';
+                }
+
+                $('#detailTableBody tr').each(function(index) {
+                    let idBarang = $(this).find('.id_barang').val();
+                    let idSatuan = $(this).find('select[name="id_satuan[]"]').val();
+                    let namaBarang = $(this).find('.nama_barang').val();
+                    let rowNumber = index + 1;
+
+                    if (idBarang && idSatuan) {
+                        let hasKonversi = konversiBarang.some(k => k.id_barang == idBarang && k.id_satuan ==
+                            idSatuan);
+                        if (!hasKonversi) {
+                            isValid = false;
+                            errorMessage +=
+                                `<li>Satuan pada baris ke-${rowNumber} tidak memiliki nilai konversi untuk bahan baku <b>${namaBarang}</b> yang dipilih.</li>`;
+                        }
+                    }
+                });
+
+                $('#error-empty-item').remove();
+                if (!isValid) {
                     $errors = $(
-                        '<div id="error-empty-item" class="alert alert-danger"><strong>Data belum valid!</strong><ul class="mb-0 mt-2 pl-3"><li>Minimal satu bahan baku harus ditambahkan.</li></ul></div>'
+                        '<div id="error-empty-item" class="alert alert-danger"><strong>Data belum valid!</strong><ul class="mb-0 mt-2 pl-3">' +
+                        errorMessage + '</ul></div>'
                     );
-                    $(this).prepend($errors); // sisipkan pesan error
+                    $(this).prepend($errors);
+                    // Scroll ke error message
+                    $('html, body').animate({
+                        scrollTop: $("#error-empty-item").offset().top - 20
+                    }, 200);
                     return false;
-                } else {
-                    $('#error-empty-item').remove();
                 }
             });
         </script>

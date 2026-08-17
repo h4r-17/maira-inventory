@@ -56,7 +56,7 @@
             </div>
             <div class="card-footer text-right">
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan</button>
-                <a href="{{ route('resep-produksi.index') }}" class="btn btn-secondary">Batal</a>
+                <a href="{{ route('resep-produksi.index') }}" class="btn btn-secondary">Kembali</a>
             </div>
         </div>
     </form>
@@ -115,7 +115,7 @@
                         <input type="hidden" name="id_barang[]" class="id_barang" value="${data.id_barang ?? ''}">
                     </td>
                     <td>
-                        <input type="number" name="standar_kuantitas[]" class="form-control" min="1" step="1" value="${data.standar_kuantitas ?? ''}" required>
+                        <input type="number" name="standar_kuantitas[]" class="form-control" min="1" step="1" value="${data.standar_kuantitas ?? ''}">
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-danger btn-sm hapus-baris-edit">

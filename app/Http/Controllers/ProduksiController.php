@@ -19,7 +19,7 @@ class ProduksiController extends Controller
      */
     public function index()
     {
-        $produksi = Produksi::with('barangJadi')->get();
+        $produksi = Produksi::with('barangJadi')->latest()->get();
 
         return view('admin-gudang.produksi.index', compact('produksi'));
     }
@@ -127,7 +127,6 @@ class ProduksiController extends Controller
                     ]);
 
                     /*Kurangi stok batch.*/
-
                     $batchBarang->decrement(
                         'sisa_persediaan',
                         $jumlahAmbil

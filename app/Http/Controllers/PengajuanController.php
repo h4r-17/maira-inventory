@@ -29,7 +29,7 @@ class PengajuanController extends Controller
      */
     public function index()
     {
-        $pengajuan = Pengajuan::get();
+        $pengajuan = Pengajuan::latest()->get();
         $folderRole = $this->getFolderRole();
 
         return view("{$folderRole}.pengajuan.index", compact('pengajuan'));
@@ -41,9 +41,10 @@ class PengajuanController extends Controller
     public function create()
     {
         $data_satuan = Satuan::select('id_satuan', 'kode_satuan')->whereNotIn('kode_satuan', ['PCS', 'GRAM'])->get();
+        $konversi_barang = \App\Models\KonversiBarang::select('id_barang', 'id_satuan')->get();
         $kodePengajuan = Pengajuan::generateKode();
 
-        return view('admin-gudang.pengajuan.add', compact('data_satuan', 'kodePengajuan'));
+        return view('admin-gudang.pengajuan.add', compact('data_satuan', 'kodePengajuan', 'konversi_barang'));
     }
 
     /**
@@ -110,8 +111,9 @@ class PengajuanController extends Controller
         $pengajuan = Pengajuan::with(['detailPengajuan.barang', 'detailPengajuan.satuan'])
             ->findOrFail($id_pengajuan);
         $data_satuan = Satuan::select('id_satuan', 'kode_satuan')->whereNotIn('kode_satuan', ['PCS', 'GRAM'])->get();
+        $konversi_barang = \App\Models\KonversiBarang::select('id_barang', 'id_satuan')->get();
 
-        return view('admin-gudang.pengajuan.edit', compact('pengajuan', 'data_satuan'));
+        return view('admin-gudang.pengajuan.edit', compact('pengajuan', 'data_satuan', 'konversi_barang'));
     }
 
     /**

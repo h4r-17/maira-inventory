@@ -17,6 +17,7 @@ class DetailPembelian extends Model
         'id_satuan',
         'harga',
         'pajak',
+        'diskon',
     ];
 
     public function pembelian()

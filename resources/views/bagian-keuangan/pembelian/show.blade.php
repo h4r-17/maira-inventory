@@ -74,6 +74,7 @@
                                 <th class="text-center">Kuantitas</th>
                                 <th class="text-center">Satuan</th>
                                 <th class="text-center">Harga</th>
+                                <th class="text-center">Diskon</th>
                                 <th class="text-center">Pajak</th>
                                 <th class="text-center">Subtotal</th>
                             </tr>
@@ -83,7 +84,8 @@
                                 // hitung total keseluruhan di luar loop agar lebih hemat memori
                                 $total_harga =
                                     $pembelian->detailPembelian?->sum(function ($item) {
-                                        $subtotal = $item->harga !== null ? $item->harga * $item->kuantitas : 0;
+                                        $subtotal =
+                                            $item->harga !== null ? $item->harga * $item->kuantitas - $item->diskon : 0;
                                         $pajak_item = $item->pajak ?? 0;
                                         return $subtotal + $pajak_item;
                                     }) ?? 0; //jika tidak ada detail pembelian, total_harga akan menjadi 0
@@ -93,9 +95,12 @@
                                     // harga x kuantitas
                                     $subtotal_kotor = $item->harga !== null ? $item->harga * $item->kuantitas : 0;
 
-                                    // Subtotal + Pajak
+                                    // Diskon
+                                    $diskon_item = $item->diskon ?? 0;
+
+                                    // Subtotal - Diskon + Pajak
                                     $pajak_item = $item->pajak ?? 0;
-                                    $subtotal_bersih = $subtotal_kotor + $pajak_item;
+                                    $subtotal_bersih = $subtotal_kotor - $diskon_item + $pajak_item;
                                 @endphp
                                 <tr>
                                     <td class="text-center">{{ $loop->iteration }}</td>
@@ -107,6 +112,9 @@
                                         {{ $item->harga !== null ? 'Rp ' . number_format($item->harga, 0, ',', '.') : '-' }}
                                     </td>
                                     <td>
+                                        {{ $item->diskon !== null ? 'Rp ' . number_format($item->diskon, 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td>
                                         {{ $item->pajak !== null ? 'Rp ' . number_format($item->pajak, 0, ',', '.') : '-' }}
                                     </td>
                                     <td>
@@ -115,14 +123,14 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-4 text-muted">Tidak ada data bahan baku pada
+                                    <td colspan="10" class="text-center py-4 text-muted">Tidak ada data bahan baku pada
                                         pengajuan ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                         <tfoot>
                             <tr>
-                                <th class="text-right" colspan="7" id="label_total_harga">Total Harga
+                                <th class="text-right" colspan="8" id="label_total_harga">Total Harga
                                 </th>
                                 <th colspan="1" id="total_harga">
                                     {{ 'Rp ' . number_format($total_harga, 0, ',', '.') }}

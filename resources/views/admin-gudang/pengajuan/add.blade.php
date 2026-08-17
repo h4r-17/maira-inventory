@@ -24,7 +24,7 @@
                     <div class="form-group">
                         <label for="tanggal_pengajuan" class="text-gray-900">Tanggal Pengajuan</label>
                         <input type="date" class="form-control" name="tanggal_pengajuan" id="tanggal_pengajuan"
-                            value="{{ old('tanggal_pengajuan') }}" required>
+                            min="{{ date('Y-m-d') }}" value="{{ old('tanggal_pengajuan') }}" required>
                         @error('tanggal_pengajuan')
                             <div class="form-text text-danger">{{ $message }}</div>
                         @enderror
@@ -65,6 +65,8 @@
 </form>
 @push('scripts')
     <script>
+        const konversiBarang = @json($konversi_barang);
+
         $(document).ready(function() {
             const satuanOptions = `
                 <option value="">Pilih satuan</option>
@@ -96,7 +98,7 @@
                             <input
                                 type="text"
                                 class="form-control barang"
-                                placeholder="Masukkan barang"
+                                placeholder="Masukkan bahan baku"
                                 autocomplete="off"
                                 value="${data.nama_barang ?? ''}">
 
@@ -112,7 +114,7 @@
                                 class="id_barang"
                                 value="${data.id_barang ?? ''}">
                         </td>
-                        <td><input type="number" class="form-control" name="kuantitas[]" min="1" required placeholder="Masukkan jumlah" value="${data.kuantitas ?? ''}"></td>
+                        <td><input type="number" class="form-control" name="kuantitas[]" min="1" required placeholder="Masukkan jumlah"value="${data.kuantitas ?? ''}"></td>
                         <td><select name="id_satuan[]" class="form-control" required>${satuanOptions}</select></td>
                         <td>
                             <input
@@ -180,16 +182,43 @@
         });
 
         $('#formPengajuan').submit(function(e) {
+            let isValid = true;
+            let errorMessage = '';
 
             if ($('#detailTableBody tr').length == 0) {
-                $('#error-empty-item').remove(); // hapus pesan error lewat id
+                isValid = false;
+                errorMessage += '<li>Minimal satu barang harus ditambahkan.</li>';
+            }
+
+            $('#detailTableBody tr').each(function(index) {
+                let idBarang = $(this).find('.id_barang').val();
+                let idSatuan = $(this).find('select[name="id_satuan[]"]').val();
+                let namaBarang = $(this).find('.nama_barang').val();
+                let rowNumber = index + 1;
+
+                if (idBarang && idSatuan) {
+                    let hasKonversi = konversiBarang.some(k => k.id_barang == idBarang && k.id_satuan ==
+                        idSatuan);
+                    if (!hasKonversi) {
+                        isValid = false;
+                        errorMessage +=
+                            `<li>Satuan pada baris ke-${rowNumber} tidak memiliki nilai konversi untuk bahan baku <b>${namaBarang}</b> yang dipilih.</li>`;
+                    }
+                }
+            });
+
+            $('#error-empty-item').remove();
+            if (!isValid) {
                 $errors = $(
-                    '<div id="error-empty-item" class="alert alert-danger"><strong>Data belum valid!</strong><ul class="mb-0 mt-2 pl-3"><li>Minimal satu barang harus ditambahkan.</li></ul></div>'
+                    '<div id="error-empty-item" class="alert alert-danger"><strong>Data belum valid!</strong><ul class="mb-0 mt-2 pl-3">' +
+                    errorMessage + '</ul></div>'
                 );
-                $(this).prepend($errors); // sisipkan pesan error
+                $(this).prepend($errors);
+                // Scroll ke error message
+                $('html, body').animate({
+                    scrollTop: $("#error-empty-item").offset().top - 20
+                }, 200);
                 return false;
-            } else {
-                $('#error-empty-item').remove();
             }
         });
     </script>

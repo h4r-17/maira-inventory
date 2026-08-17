@@ -34,34 +34,19 @@
                                 <option value="BTL"
                                     {{ old('kode_satuan', $satuan->kode_satuan) == 'BTL' ? 'selected' : '' }}>BTL</option>
                             </select>
-                            @error('kode_satuan')
-                                <div class="form-text text-danger">{{ $message }}</div>
-                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="nama_satuan">Nama Satuan</label>
                             <input type="text" class="form-control" id="nama_satuan" placeholder="Masukan Nama Satuan"
                                 name="nama_satuan" value="{{ old('nama_satuan', $satuan->nama_satuan) }}" minlength="3"
                                 maxlength="20">
-                            @error('nama_satuan')
-                                <div class="form-text text-danger">{{ $message }}</div>
-                            @enderror
                         </div>
                         <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i>
-                            Ubah</button>
-                        <button type="reset" class="btn btn-warning" onclick="this.form.reset()"
-                            id="resetBtn">Reset</button>
+                            Simpan</button>
                         <a href="{{ route('satuan.index') }}" class="btn btn-secondary">Kembali</a>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-    <script>
-        const resetBtn = document.getElementById('resetBtn');
-
-        form.addEventListener('reset', () => {
-            setTimeout(checkFormChanges, 0);
-        });
-    </script>
 @endsection

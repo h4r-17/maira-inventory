@@ -32,7 +32,7 @@ class PembelianController extends Controller
      */
     public function index()
     {
-        $pembelian = Pembelian::with('supplier:id_supplier,nama_supplier')->get();
+        $pembelian = Pembelian::with('supplier:id_supplier,nama_supplier')->latest()->get();
         $folderRole = $this->getFolderRole();
 
         return view("{$folderRole}.pembelian.index", compact('pembelian'));
@@ -93,6 +93,7 @@ class PembelianController extends Controller
                         'id_satuan' => $validated['id_satuan'][$index] ?? null,
                         'harga' => $harga,
                         'pajak' => $nominalPajak,
+                        'diskon' => $validated['diskon'][$index] ?? null,
                     ]);
                 }
             });
@@ -176,11 +177,12 @@ class PembelianController extends Controller
                         'id_satuan' => $validated['id_satuan'][$index] ?? null,
                         'harga' => $harga,
                         'pajak' => $nominalPajak,
+                        'diskon' => $validated['diskon'][$index] ?? null,
                     ]);
                 }
             });
 
-            return redirect()->route('pembelian.index')->with('success', 'Pencatatan Pembelian berhasil diperbarui!');
+            return redirect()->route('pembelian.index')->with('success', 'Pembelian berhasil diperbarui!');
         } catch (Throwable $e) {
             Log::error('Error saat update pembelian ID ' . $id_pembelian . ': ' . $e->getMessage());
 
@@ -196,7 +198,7 @@ class PembelianController extends Controller
         try {
             Pembelian::findOrFail($id_pembelian)->delete();
 
-            return redirect()->route('pembelian.index')->with('success', 'Pencatatan Pembelian berhasil dihapus!');
+            return redirect()->route('pembelian.index')->with('success', 'Pembelian berhasil dihapus!');
         } catch (Throwable $e) {
             Log::error('Error saat hapus pembelian ID ' . $id_pembelian . ': ' . $e->getMessage());
 

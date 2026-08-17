@@ -22,7 +22,7 @@
                     <div class="form-group">
                         <label for="tanggal_pembelian" class="text-gray-900">Tanggal Pembelian</label>
                         <input type="date" class="form-control" id="tanggal_pembelian" name="tanggal_pembelian"
-                            value="{{ old('tanggal_pembelian') }}" required>
+                            min="{{ date('Y-m-d') }}" value="{{ old('tanggal_pembelian') }}" required>
                         @error('tanggal_pembelian')
                             <div class="form-text text-danger">{{ $message }}</div>
                         @enderror
@@ -89,6 +89,7 @@
                             <th>Kuantitas</th>
                             <th>Satuan</th>
                             <th>Harga</th>
+                            <th>Diskon</th>
                             <th>Deskripsi</th>
                             <th class="text-center">Aksi</th>
                         </tr>
@@ -165,14 +166,15 @@
                 let row = $(`
                     <tr>
                         <td>
-                            <input type="text" class="form-control barang" autocomplete="off" placeholder="Masukkan nama barang" value="${data.nama_barang ?? ''}">
+                            <input type="text" class="form-control barang" autocomplete="off" placeholder="Masukkan nama bahan baku" value="${data.nama_barang ?? ''}">
                             <input type="hidden" class="nama_barang" name="nama_barang[]" value="${escapeHtml(data.nama_barang ?? '')}">
                             <input type="hidden" class="id_barang" name="id_barang[]" value="${escapeHtml(data.id_barang ?? '')}">
                         </td>
                         <td><input type="number" class="form-control" min="1" name="kuantitas[]" placeholder="Masukkan jumlah" required value="${escapeHtml(data.kuantitas ?? '')}"></td>
-                        <td><input type="text" class="form-control" name="deskripsi[]" placeholder="Jika ada" value="${escapeHtml(data.deskripsi ?? '')}"></td>
                         <td><select class="form-control satuan" name="id_satuan[]" required>${satuanOptions}</select></td>
-                        <td><div class="input-group"> <div class="input-group-prepend"> <span class="input-group-text">Rp</span></div> <input type="number" class="form-control" name="harga[]" min="1" step="0.01" placeholder="Masukkan harga" required value="${escapeHtml(data.harga ?? '')}"></div>
+                        <td><div class="input-group"><div class="input-group-prepend"><span class="input-group-text">Rp</span></div> <input type="number" class="form-control" name="harga[]" min="1" step="0.01" placeholder="Masukkan harga" required value="${escapeHtml(data.harga ?? '')}"></div>
+                        <td><div class="input-group"><div class="input-group-prepend"><span class="input-group-text">Rp</span></div> <input type="number" class="form-control" name="diskon[]" min="1" step="0.01" placeholder="Jika ada" value="${escapeHtml(data.diskon ?? '')}"></div>
+                        <td><input type="text" class="form-control" name="deskripsi[]" placeholder="Jika ada" value="${escapeHtml(data.deskripsi ?? '')}"></td>
                         </td>
                         <td class="text-center"><button type="button" class="btn btn-danger btn-sm hapus"><i class="fas fa-trash"></i></button></td>
                     </tr>`);
@@ -196,6 +198,7 @@
             const oldKuantitas = @json(old('kuantitas', []));
             const oldSatuan = @json(old('id_satuan', []));
             const oldHarga = @json(old('harga', []));
+            const oldDiskon = @json(old('diskon', []));
 
             if (oldBarang.length > 0) {
                 for (let i = 0; i < oldBarang.length; i++) {
@@ -205,7 +208,8 @@
                         deskripsi: oldDeskripsi[i] ?? '',
                         kuantitas: oldKuantitas[i] ?? '',
                         id_satuan: oldSatuan[i] ?? '',
-                        harga: oldHarga[i] ?? ''
+                        harga: oldHarga[i] ?? '',
+                        diskon: oldDiskon[i] ?? ''
                     });
                 }
             }

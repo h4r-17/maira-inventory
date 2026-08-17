@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Produksi;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProduksiRequest extends FormRequest
@@ -21,12 +22,11 @@ class StoreProduksiRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $id_produksi = $this->route('produksi');
+        $rules = [
             'batch_produk' => 'required|min:5|max:50',
-            'tanggal_produksi' => 'required|date|after_or_equal:today',
             'id_produk' => 'required|exists:barang_jadi,id_produk',
             'hasil_produksi' => 'required|numeric|min:1',
-            'produk_expired' => 'required|date|after_or_equal:' . date('Y-m-d', strtotime('+1 year')),
             'tujuan_produksi' => 'required|min:3|max:50',
             'id_barang' => 'required|array|min:1',
             'id_barang.*' => 'required|exists:barang,id_barang',
@@ -35,6 +35,17 @@ class StoreProduksiRequest extends FormRequest
             'deskripsi' => 'nullable|array',
             'deskripsi.*' => 'nullable|string|max:255',
         ];
+
+        if ($this->isMethod('POST')) {
+            $rules['tanggal_produksi'] = 'required|date|after_or_equal:today';
+            $rules['produk_expired'] = 'required|date|after_or_equal:' . date('Y-m-d', strtotime('+1 year'));
+        } else {
+            $produksi = Produksi::findOrFail($id_produksi);
+            $rules['tanggal_produksi'] = 'required|date|after_or_equal:' . $produksi->tanggal_produksi;
+            $rules['produk_expired'] = 'required|date|after_or_equal:date' . $produksi->produk_expired;
+        }
+
+        return $rules;
     }
 
     public function messages(): array

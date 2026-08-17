@@ -5,10 +5,9 @@
         <div class="col-lg-12">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Form Edit Bahan Baku</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Form Edit Konversi Bahan Baku</h6>
                 </div>
                 <div class="card-body">
-                    <!-- Pastikan method menggunakan PUT atau PATCH untuk update -->
                     <form action="{{ route('konversi-barang.update', $konversiBarang->id_konversi) }}" method="POST"
                         enctype="multipart/form-data">
                         @csrf
@@ -47,8 +46,8 @@
                                 value="{{ old('nilai_konversi', $konversiBarang->nilai_konversi) }}">
                         </div>
 
-                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i> Simpan
-                            Perubahan</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i>
+                            Simpan</button>
                         <a href="{{ route('konversi-barang.index') }}" class="btn btn-secondary">Kembali</a>
                     </form>
                 </div>
@@ -59,15 +58,6 @@
     @push('scripts')
         <script>
             const form = document.querySelector('form');
-            const resetBtn = document.getElementById('resetBtn');
-
-            if (form) {
-                form.addEventListener('reset', () => {
-                    if (typeof checkFormChanges === 'function') {
-                        setTimeout(checkFormChanges, 0);
-                    }
-                });
-            }
 
             $(document).ready(function() {
                 $('#nama_barang').autocomplete({

@@ -3,11 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Models\BatchBarang;
-use App\Models\DetailPembelian;
-use App\Models\DetailPenerimaan;
 use App\Models\Penerimaan;
 use App\Models\Retur;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePenerimaanRequest extends FormRequest
@@ -50,7 +47,7 @@ class StorePenerimaanRequest extends FormRequest
             'alasan_penolakan' => 'nullable|array',
             'alasan_penolakan.*' => 'nullable|string|max:255',
             'expired_date' => 'required|array',
-            'expired_date.*' => 'nullable|date|after_or_equal:' . date('Y-m-d', strtotime('+1 year')),
+            'expired_date.*' => 'nullable|date|after_or_equal:' . date('Y-m-d', strtotime('+4 months')),
             'kode_lot_supplier' => 'nullable|array',
             'kode_lot_supplier.*' => 'nullable|string|max:100',
             'deskripsi' => 'nullable|array',
@@ -65,9 +62,12 @@ class StorePenerimaanRequest extends FormRequest
         if ($this->isMethod('POST')) {
             // Aturan untuk Store
             $rules['no_registrasi'] = 'required|unique:penerimaan,no_registrasi';
+            $rules['tanggal_masuk'] = 'required|date|after_or_equal:today';
         } else {
+            $penerimaan = Penerimaan::findOrFail($id_penerimaan);
             // Aturan untuk Update (Mengabaikan ID penerimaan yang sedang diedit)
             $rules['no_registrasi'] = 'required|unique:penerimaan,no_registrasi,' . $id_penerimaan . ',id_penerimaan';
+            $rules['tanggal_masuk'] = 'required|date|after_or_equal:' . $penerimaan->tanggal_masuk;
         }
 
         return $rules;
@@ -217,7 +217,7 @@ class StorePenerimaanRequest extends FormRequest
             'id_detail_penerimaan.*.exists' => 'ID detail penerimaan tidak valid',
             'expired_date.*.required' => 'Tanggal kedaluwarsa wajib diisi.',
             'expired_date.*.date' => 'Format tanggal tidak valid.',
-            'expired_date.*.after_or_equal' => 'Tanggal minimal harus setelah 1 tahun dari hari ini (minimal tanggal ' . date('d-m-Y', strtotime('+1 year')) . ').',
+            'expired_date.*.after_or_equal' => 'Tanggal minimal harus setelah 4 bulan dari hari ini (minimal tanggal ' . date('d-m-Y', strtotime('+4 months')) . ').',
         ];
     }
 }

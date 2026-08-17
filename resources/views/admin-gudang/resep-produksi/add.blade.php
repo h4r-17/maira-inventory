@@ -13,7 +13,7 @@
             <div class="card-body">
                 <div class="form-group mb-0">
                     <label for="id_produk" class="text-gray-900">Nama Produk</label>
-                    <select class="form-control" id="id_produk" name="id_produk" required>
+                    <select class="form-control" id="id_produk" name="id_produk">
                         <option value="">Pilih Produk</option>
                         @foreach ($data_produk as $produk)
                             <option value="{{ $produk->id_produk }}" @selected(old('id_produk') == $produk->id_produk)>
@@ -62,7 +62,7 @@
             </div>
             <div class="card-footer text-right">
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Tambah</button>
-                <a href="{{ route('resep-produksi.index') }}" class="btn btn-secondary">Batal</a>
+                <a href="{{ route('resep-produksi.index') }}" class="btn btn-secondary">Kembali</a>
             </div>
         </div>
     </form>

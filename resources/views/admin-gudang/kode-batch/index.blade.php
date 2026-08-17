@@ -9,8 +9,40 @@
         <h6 class="m-0 font-weight-bold text-primary">Tabel Batch Bahan Baku</h6>
     </div>
     <div class="card-body">
+        <form action="{{ route('kode-batch.index') }}" method="GET" class="mb-4">
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <label class="font-weight-bold">Bahan Baku</label>
+                    <select name="bahan_baku" class="form-control">
+                        <option value="">-- Pilih Bahan Baku --</option>
+                        @foreach ($barangs as $brg)
+                            <option value="{{ $brg->id_barang }}"
+                                {{ request('bahan_baku') == $brg->id_barang ? 'selected' : '' }}>
+                                {{ $brg->nama_barang }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label class="font-weight-bold">Urutkan Tanggal Expired</label>
+                    <select name="sort_tanggal" class="form-control">
+                        <option value="">-- Pilih Urutan --</option>
+                        <option value="terbaru" {{ request('sort_tanggal') == 'terbaru' ? 'selected' : '' }}>Terdekat
+                        </option>
+                        <option value="terlama" {{ request('sort_tanggal') == 'terlama' ? 'selected' : '' }}>Terjauh
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter"></i> Filter</button>
+                    <a href="{{ route('kode-batch.index') }}" class="btn btn-secondary"><i class="fas fa-sync"></i>
+                        Reset</a>
+                </div>
+            </div>
+        </form>
+
         <div class="table-responsive">
-            <table class="table table-bordered text-gray-900 " id="tabelData" width="100%" cellspacing="0">
+            <table class="table table-bordered text-gray-900 " width="100%" cellspacing="0">
                 <thead class="bg-light">
                     <tr>
                         <th width="5%">No</th>
@@ -24,7 +56,7 @@
                 <tbody>
                     @foreach ($batchBarang as $batch)
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $batchBarang->firstItem() + $loop->index }}</td>
                             <td>
                                 <span class="badge badge-primary">{{ $batch->kode_batch }}</span>
                             </td>
@@ -52,6 +84,10 @@
                     @endforeach
                 </tbody>
             </table>
+
+            <div class="mt-3">
+                {{ $batchBarang->links('pagination::bootstrap-4') }}
+            </div>
         </div>
     </div>
 @endsection

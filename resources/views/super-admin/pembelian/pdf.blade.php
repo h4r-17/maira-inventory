@@ -180,9 +180,9 @@
         }
 
         .grand-total-row td {
-            background-color: #f0c14b;
             font-weight: bold;
             border-top: 1px solid #333;
+            background-color: #f0c14b;
         }
 
         /* ===== Signature ===== */
@@ -285,6 +285,7 @@
     @php
         // Sub Total = total keseluruhan (harga x kuantitas) + pajak per baris
         // Pajak    = total pajak seluruh item (sudah termasuk dalam Sub Total, ditampilkan sbg informasi)
+        $totalDiskon = 0;
         $totalKuantitas = 0;
         $totalPajak = 0;
         $subTotal = 0;
@@ -294,11 +295,12 @@
         <thead>
             <tr>
                 <th style="width: 4%;">No</th>
-                <th style="width: 20%;">Bahan Baku</th>
+                <th style="width: 20%;">Barang</th>
                 <th style="width: 14%;">Deskripsi</th>
                 <th style="width: 9%;">Kuantitas</th>
                 <th style="width: 8%;">Satuan</th>
                 <th style="width: 14%;">Harga</th>
+                <th style="width: 14%;">Diskon</th>
                 <th style="width: 14%;">Pajak</th>
                 <th style="width: 17%;">Total</th>
             </tr>
@@ -307,12 +309,14 @@
             @forelse($pembelian->detailPembelian as $item)
                 @php
                     $subtotalKotor = $item->harga !== null ? $item->harga * $item->kuantitas : 0;
+                    $diskonItem = $item->diskon ?? 0;
                     $pajakItem = $item->pajak ?? 0;
-                    $subtotalBersih = $subtotalKotor;
+                    $subtotalBersih = $subtotalKotor - $diskonItem + $pajakItem;
 
                     $totalKuantitas += $item->kuantitas;
+                    $totalDiskon += $diskonItem;
                     $totalPajak += $pajakItem;
-                    $subTotal += $subtotalBersih;
+                    $subTotal += $subtotalKotor; // Sub Total kotor sebelum diskon dan pajak
                 @endphp
                 <tr>
                     <td class="center">{{ $loop->iteration }}</td>
@@ -323,12 +327,14 @@
                     <td class="right">
                         {{ $item->harga !== null ? number_format($item->harga, 0, ',', '.') : '-' }}</td>
                     <td class="right">
+                        {{ $item->diskon !== null ? number_format($item->diskon, 0, ',', '.') : '-' }}</td>
+                    <td class="right">
                         {{ $item->pajak !== null ? number_format($item->pajak, 0, ',', '.') : '-' }}</td>
                     <td class="right">{{ number_format($subtotalBersih, 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="center">Tidak ada data bahan baku pada pembelian ini.</td>
+                    <td colspan="9" class="center">Tidak ada data barang pada pembelian ini.</td>
                 </tr>
             @endforelse
         </tbody>
@@ -336,17 +342,15 @@
             <tr>
                 <td colspan="3" class="center">Total Jumlah</td>
                 <td class="center">{{ $totalKuantitas }}</td>
-                <td colspan="4"></td>
+                <td colspan="5"></td>
             </tr>
         </tfoot>
     </table>
 
     {{-- ===================== RINGKASAN & TERBILANG ===================== --}}
     @php
-        // Grand Total = Sub Total (diskon, disk faktur, biaya kirim diabaikan)
-        // Sisa Tagihan = Grand Total (uang muka diabaikan)
-        $grandTotal = $subTotal + $totalPajak;
-        // $sisaTagihan = $grandTotal;
+        // Grand Total = Sub Total - Diskon + Pajak (biaya lain diabaikan)
+        $grandTotal = $subTotal - $totalDiskon + $totalPajak;
     @endphp
 
     <table class="summary-table">
@@ -370,6 +374,11 @@
                         <td class="rincian-label">Sub Total</td>
                         <td class="rincian-colon">:</td>
                         <td class="rincian-value">{{ number_format($subTotal, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="rincian-label">Diskon</td>
+                        <td class="rincian-colon">:</td>
+                        <td class="rincian-value">{{ number_format($totalDiskon, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
                         <td class="rincian-label">Pajak (11%)</td>

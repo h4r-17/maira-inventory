@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePenerimaanRequest;
-use App\Models\Barang;
 use App\Models\BatchBarang;
 use App\Models\DetailPembelian;
 use App\Models\DetailPenerimaan;
@@ -48,8 +47,7 @@ class PenerimaanController extends Controller
                 'pembelian' => function ($query) {
                     $query->select('id_pembelian', 'no_nota', 'id_supplier')->with('supplier:id_supplier,nama_supplier');
                 }
-            ])
-            ->get();
+            ])->latest()->get();
 
         return view("admin-gudang.penerimaan.index", compact('penerimaan'));
     }
@@ -61,7 +59,7 @@ class PenerimaanController extends Controller
     {
         $penerimaan = Penerimaan::with('detailPenerimaan.batch', 'retur')->get();
         $data_pembelian = Pembelian::select('id_pembelian', 'no_nota', 'id_supplier')->with('supplier:id_supplier,nama_supplier')->get();
-        $data_retur = Retur::where('status', 'Pending')->whereDoesntHave('penerimaan')->with(['pembelian.supplier'])->get();
+        $data_retur = Retur::where('status', 'Pending')->whereDoesntHave('penerimaanPengganti')->with(['pembelian.supplier'])->get();
         $kodeRegis = Penerimaan::generateNoRegis();
 
         return view('admin-gudang.penerimaan.add', compact('penerimaan', 'kodeRegis', 'data_pembelian', 'data_retur'));
@@ -106,7 +104,7 @@ class PenerimaanController extends Controller
                         throw ValidationException::withMessages(['id_retur' => 'Retur tersebut sudah diproses dan tidak dapat diterima kembali.']);
                     }
 
-                    if ($retur->penerimaan()->exists()) {
+                    if ($retur->penerimaanPengganti()->exists()) {
                         throw ValidationException::withMessages(['id_retur' => 'Retur tersebut sudah memiliki penerimaan.']);
                     }
                 }
@@ -144,7 +142,7 @@ class PenerimaanController extends Controller
                         ]);
                     }
 
-                    // validasi jumlah masuk dan jumlah ditolak tidak boleh melebihi jumlah pembelian
+                    // validasi jumlah masuk dan jumlah ditolak tidak boleh melebihi jumlah pembelian dan retur
                     if (!$isRetur) {
 
                         $detailBeli = $detailPembelian->get($id_barang);
@@ -183,6 +181,25 @@ class PenerimaanController extends Controller
                                         "Kelebihan {$kelebihan}."
                                 ]);
                             }
+                        }
+                    } else {
+                        $jumlahRetur = \App\Models\DetailRetur::where('id_retur', $validated['id_retur'])
+                            ->whereHas('batch', function ($query) use ($id_barang) {
+                                $query->where('id_barang', $id_barang);
+                            })->sum('jumlah_retur');
+
+                        $jumlahSekarang = $jumlah_masuk + $jumlah_ditolak;
+
+                        if ($jumlahSekarang > $jumlahRetur) {
+                            $kelebihan = $jumlahSekarang - $jumlahRetur;
+
+                            throw ValidationException::withMessages([
+                                "jumlah_masuk.{$index}" =>
+                                "Jumlah masuk dan jumlah ditolak melebihi jumlah yang diretur. " .
+                                    "Diretur sebanyak {$jumlahRetur}, " .
+                                    "sedangkan yang diinput {$jumlahSekarang}. " .
+                                    "Kelebihan {$kelebihan}."
+                            ]);
                         }
                     }
 
@@ -229,6 +246,8 @@ class PenerimaanController extends Controller
             });
 
             return redirect()->route('penerimaan.index')->with('success', 'Penerimaan berhasil disimpan!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (Throwable $e) {
             Log::error(
                 'Error saat create penerimaan: ' . $e->getMessage()
@@ -262,7 +281,7 @@ class PenerimaanController extends Controller
 
         // Ambil data retur yang statusnya Pending dan belum memiliki penerimaan, atau yang sudah terkait dengan penerimaan ini
         $data_retur = Retur::where(function ($query) use ($penerimaan) {
-            $query->whereDoesntHave('penerimaan')->orWhere('id_retur', $penerimaan->id_retur);
+            $query->whereDoesntHave('penerimaanPengganti')->orWhere('id_retur', $penerimaan->id_retur);
         })->whereIn('status', ['Pending', 'Diretur'])->select('id_retur', 'no_retur')->get();
 
         return view('admin-gudang.penerimaan.edit', compact('penerimaan', 'data_retur'));
@@ -468,6 +487,23 @@ class PenerimaanController extends Controller
                                     "jumlah_masuk.{$index}" => "Jumlah masuk dan jumlah ditolak melebihi sisa pembelian. " . "Sisa pembelian: {$sisaPembelian}, " . "sedangkan yang dimasukkan {$jumlahSekarang}. " . "Kelebihan {$kelebihan}."
                                 ]);
                             }
+                        }
+                    } else {
+                        $jumlahRetur = \App\Models\DetailRetur::where('id_retur', $newReturId)
+                            ->whereHas('batch', function ($query) use ($idBarang) {
+                                $query->where('id_barang', $idBarang);
+                            })->sum('jumlah_retur');
+
+                        if ($jumlahSekarang > $jumlahRetur) {
+                            $kelebihan = $jumlahSekarang - $jumlahRetur;
+                            
+                            throw ValidationException::withMessages([
+                                "jumlah_masuk.{$index}" =>
+                                "Jumlah masuk dan jumlah ditolak melebihi jumlah yang diretur. " .
+                                    "Diretur sebanyak {$jumlahRetur}, " .
+                                    "sedangkan yang diinput {$jumlahSekarang}. " .
+                                    "Kelebihan {$kelebihan}."
+                            ]);
                         }
                     }
                 }
@@ -720,8 +756,7 @@ class PenerimaanController extends Controller
             'detailPembelian.satuan'
         ])
             ->where('no_nota', 'LIKE', '%' . $request->term . '%')
-            ->limit(5)
-            ->get();
+            ->whereDoesntHave('penerimaan')->limit(5)->latest()->get();
 
         $result = $pembelian->map(function ($p) {
 

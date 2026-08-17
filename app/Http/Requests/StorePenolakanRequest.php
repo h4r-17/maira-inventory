@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Penolakan;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
@@ -23,9 +24,8 @@ class StorePenolakanRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'no_penolakan' => 'required|string|max:50',
-            'tanggal_penolakan' => 'required|date|after_or_equal:today',
+        $id_penolakan = $this->route('id_penolakan');
+        $rules = [
             'id_produksi' => 'required|exists:produksi,id_produksi',
             'status' => 'required|in:Retur,Dimusnahkan,Sortir',
             'id_batch' => 'required|array|min:1',
@@ -39,6 +39,18 @@ class StorePenolakanRequest extends FormRequest
             'deskripsi' => 'nullable|array',
             'deskripsi.*' => ['nullable', 'string', 'max:50',],
         ];
+
+        if ($this->isMethod('POST')) {
+            // Aturan untuk Store
+            $rules['no_penolakan'] = 'required|unique:penolakan,no_penolakan';
+            $rules['tanggal_penolakan'] = 'required|date';
+        } else {
+            // Aturan untuk Update (Mengabaikan ID pengajuan yang sedang diedit)
+            $rules['no_penolakan'] = 'required|unique:penolakan,no_penolakan,' . $id_penolakan . ',id_penolakan';
+            $rules['tanggal_penolakan'] = 'required|date';
+        }
+
+        return $rules;
     }
 
     public function messages(): array
@@ -50,7 +62,6 @@ class StorePenolakanRequest extends FormRequest
 
             'tanggal_penolakan.required' => 'Tanggal penolakan wajib diisi',
             'tanggal_penolakan.date' => 'Format tanggal penolakan tidak valid',
-            'tanggal_penolakan.after_or_equal' => 'Tanggal penolakan harus setelah atau sama dengan hari ini',
 
             'id_produksi.required' => 'Produksi wajib dipilih',
             'id_produksi.exists' => 'Produksi yang dipilih tidak valid',

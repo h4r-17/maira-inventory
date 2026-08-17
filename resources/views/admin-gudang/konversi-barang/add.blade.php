@@ -12,10 +12,8 @@
                         @csrf
                         <div class="form-group">
                             <label for="nama_barang" class="text-gray-900">Nama Bahan Baku</label>
-                            <!-- Input untuk mengetik dan memunculkan autocomplete -->
                             <input type="text" name="nama_barang" id="nama_barang" class="form-control w-25"
-                                placeholder="Nama Bahan Baku" value="{{ old('nama_barang') }}" required autocomplete="off">
-                            <!-- Input hidden untuk menampung primary key id_pengajuan -->
+                                placeholder="Nama Bahan Baku" value="{{ old('nama_barang') }}" autocomplete="off">
                             <input type="hidden" name="id_barang" id="id_barang" value="{{ old('id_barang') }}">
                         </div>
                         <div class="form-group">
@@ -40,8 +38,6 @@
                         </div>
                         <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i>
                             Tambah</button>
-                        <button type="reset" class="btn btn-warning" onclick="this.form.reset()"
-                            id="resetBtn">Reset</button>
                         <a href="{{ route('konversi-barang.index') }}" class="btn btn-secondary">Kembali</a>
                     </form>
                 </div>
@@ -51,15 +47,6 @@
     @push('scripts')
         <script>
             const form = document.querySelector('form');
-            const resetBtn = document.getElementById('resetBtn');
-
-            if (form) {
-                form.addEventListener('reset', () => {
-                    if (typeof checkFormChanges === 'function') {
-                        setTimeout(checkFormChanges, 0);
-                    }
-                });
-            }
 
             $(document).ready(function() {
                 $('#nama_barang').autocomplete({

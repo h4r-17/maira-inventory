@@ -36,18 +36,28 @@
                             <td>{{ $item->produksi->batch_produk }}</td>
                             <td>{{ $item->status }}</td>
                             <td>
+                                @php
+                                    $isDiretur = $item->retur && $item->retur->status == 'Diretur';
+                                @endphp
                                 <a href="{{ route('penolakan.show', $item->id_penolakan) }}"
                                     class="btn btn-sm btn-info"><i class="fa-solid fa-eye"></i></a>
-                                <a href="{{ route('penolakan.edit', $item->id_penolakan) }}"
-                                    class="btn btn-sm btn-warning"><i class="fa-solid fa-pen-to-square"></i></a>
+                                
+                                @if (!$isDiretur)
+                                    <a href="{{ route('penolakan.edit', $item->id_penolakan) }}"
+                                        class="btn btn-sm btn-warning"><i class="fa-solid fa-pen-to-square"></i></a>
+                                @endif
+                                
                                 <a href="{{ route('penolakan.pdf', $item->id_penolakan) }}" target="_blank"
                                     class="btn btn-sm btn-info"><i class="fa-solid fa-print"></i>
                                 </a>
+                                
                                 <!-- Button trigger modal -->
-                                <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
-                                    data-target="#hapus{{ $item->id_penolakan }}">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
+                                @if (!$isDiretur)
+                                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
+                                        data-target="#hapus{{ $item->id_penolakan }}">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                @endif
                             </td>
                         </tr>
                     @endforeach

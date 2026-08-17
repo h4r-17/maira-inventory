@@ -15,17 +15,11 @@
                             <input type="text" class="form-control w-25" id="kode_produk" minlength="3" maxlength="30"
                                 placeholder="Masukan kode produk" name="kode_produk"
                                 value="{{ old('kode_produk', $kodeProduk) }}" readonly>
-                            @error('kode_produk')
-                                <div class="form-text text-danger">{{ $message }}</div>
-                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="nama_produk" class="text-gray-900">Nama Produk</label>
                             <input type="text" class="form-control w-25" id="nama_produk" minlength="3" maxlength="50"
                                 placeholder="Masukan nama produk" name="nama_produk" value="{{ old('nama_produk') }}">
-                            @error('nama_produk')
-                                <div class="form-text text-danger">{{ $message }}</div>
-                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="id_satuan" class="text-gray-900">Satuan</label>
@@ -39,25 +33,13 @@
                                     </option>
                                 @endforeach
                             </select>
-                            @error('id_satuan')
-                                <div class="form-text text-danger">{{ $message }}</div>
-                            @enderror
                         </div>
                         <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i>
                             Tambah</button>
-                        <button type="reset" class="btn btn-warning" onclick="this.form.reset()"
-                            id="resetBtn">Reset</button>
                         <a href="{{ route('barang-jadi.index') }}" class="btn btn-secondary">Kembali</a>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-    <script>
-        const resetBtn = document.getElementById('resetBtn');
-
-        form.addEventListener('reset', () => {
-            setTimeout(checkFormChanges, 0);
-        });
-    </script>
 @endsection

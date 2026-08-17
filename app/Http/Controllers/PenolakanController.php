@@ -28,7 +28,7 @@ class PenolakanController extends Controller
      */
     public function index()
     {
-        $penolakan = Penolakan::with('produksi')->get();
+        $penolakan = Penolakan::with('produksi')->latest()->get();
         $folderRole = $this->getFolderRole();
 
 
@@ -80,6 +80,17 @@ class PenolakanController extends Controller
                         "jumlah_ditolak.{$index}" =>
                         'Jumlah ditolak harus lebih dari 0.'
                     ]);
+                }
+
+                if ($validated['status'] === 'Retur') {
+                    $barang = \App\Models\Barang::with('konversiBarang')->find($id_batch) ?? \App\Models\BatchBarang::with('barang.konversiBarang')->find($id_batch)->barang;
+                    $nilaiKonversi = $barang->konversiBarang ? $barang->konversiBarang->nilai_konversi : 1;
+                    if ($jumlahDitolak % $nilaiKonversi !== 0) {
+                        throw ValidationException::withMessages([
+                            "jumlah_ditolak.{$index}" =>
+                            "Jumlah ditolak untuk barang {$barang->nama_barang} harus kelipatan dari nilai konversi ({$nilaiKonversi})."
+                        ]);
+                    }
                 }
 
                 $batchBarang = BatchBarang::where(
@@ -163,7 +174,7 @@ class PenolakanController extends Controller
      */
     public function show(string $id_penolakan)
     {
-        $penolakan = Penolakan::with('produksi', 'detailPenolakan.batch.barang')->findOrFail($id_penolakan);
+        $penolakan = Penolakan::with('produksi', 'detailPenolakan.batch.barang.konversiBarang')->findOrFail($id_penolakan);
 
         return view('admin-gudang.penolakan.show', compact('penolakan'));
     }
@@ -173,7 +184,7 @@ class PenolakanController extends Controller
      */
     public function edit(string $id_penolakan)
     {
-        $penolakan = Penolakan::with('produksi', 'detailPenolakan.batch.barang')->findOrFail($id_penolakan);
+        $penolakan = Penolakan::with('produksi', 'detailPenolakan.batch.barang.konversiBarang')->findOrFail($id_penolakan);
 
         return view('admin-gudang.penolakan.edit', compact('penolakan'));
     }
@@ -235,6 +246,17 @@ class PenolakanController extends Controller
                         "jumlah_ditolak.{$index}" =>
                         'Jumlah ditolak harus lebih dari 0.'
                     ]);
+                }
+
+                if ($validated['status'] === 'Retur') {
+                    $barang = \App\Models\Barang::with('konversiBarang')->find($id_batch) ?? \App\Models\BatchBarang::with('barang.konversiBarang')->find($id_batch)->barang;
+                    $nilaiKonversi = $barang->konversiBarang ? $barang->konversiBarang->nilai_konversi : 1;
+                    if ($jumlahDitolak % $nilaiKonversi !== 0) {
+                        throw ValidationException::withMessages([
+                            "jumlah_ditolak.{$index}" =>
+                            "Jumlah ditolak untuk barang {$barang->nama_barang} harus kelipatan dari nilai konversi ({$nilaiKonversi})."
+                        ]);
+                    }
                 }
 
                 /*Cari batch berdasarkan id_batch*/
@@ -397,7 +419,7 @@ class PenolakanController extends Controller
         $idBarangResep = ResepProduksi::where('id_produk', $produksi->id_produk)
             ->pluck('id_barang');
 
-        $batch = BatchBarang::with('barang')
+        $batch = BatchBarang::with('barang.konversiBarang')
             ->whereIn('id_barang', $idBarangResep)
             ->where('sisa_persediaan', '>', 0)
             ->where(function ($query) use ($term) {
@@ -418,6 +440,7 @@ class PenolakanController extends Controller
                 'id_barang' => $b->id_barang,
                 'nama_barang' => $b->barang->nama_barang,
                 'sisa_persediaan' => $b->sisa_persediaan,
+                'nilai_konversi' => $b->barang->konversiBarang ? $b->barang->konversiBarang->nilai_konversi : 1,
             ];
         }
 

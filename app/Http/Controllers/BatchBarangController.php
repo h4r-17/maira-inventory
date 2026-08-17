@@ -7,10 +7,27 @@ use Illuminate\Http\Request;
 
 class BatchBarangController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $batchBarang = BatchBarang::with('barang')->orderBy('id_batch')->get();
+        $query = BatchBarang::with('barang');
 
-        return view('admin-gudang.kode-batch.index', compact('batchBarang'));
+        if ($request->filled('bahan_baku')) {
+            $query->where('id_barang', $request->bahan_baku);
+        }
+
+        if ($request->filled('sort_tanggal')) {
+            if ($request->sort_tanggal == 'terbaru') {
+                $query->orderBy('expired_date', 'desc');
+            } elseif ($request->sort_tanggal == 'terlama') {
+                $query->orderBy('expired_date', 'asc');
+            }
+        } else {
+            $query->orderBy('id_batch', 'desc');
+        }
+
+        $batchBarang = $query->paginate(10)->withQueryString();
+        $barangs = \App\Models\Barang::orderBy('nama_barang', 'asc')->get();
+
+        return view('admin-gudang.kode-batch.index', compact('batchBarang', 'barangs'));
     }
 }

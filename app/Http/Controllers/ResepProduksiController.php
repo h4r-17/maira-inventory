@@ -52,7 +52,7 @@ class ResepProduksiController extends Controller
 
     public function create()
     {
-        $data_produk = BarangJadi::select('id_produk', 'nama_produk')->get();
+        $data_produk = BarangJadi::select('id_produk', 'nama_produk')->whereDoesntHave('resepProduksi')->get();
         $data_barang = Barang::select('id_barang', 'nama_barang')->get();
 
         return view('admin-gudang.resep-produksi.add', compact('data_produk', 'data_barang'));

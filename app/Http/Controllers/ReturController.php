@@ -36,7 +36,7 @@ class ReturController extends Controller
      */
     public function index()
     {
-        $retur = Retur::with('penolakan', 'pembelian')->get();
+        $retur = Retur::with('penolakan', 'pembelian')->latest()->get();
         $folderRole = $this->getFolderRole();
 
         return view("{$folderRole}.retur.index", compact('retur'));
@@ -320,24 +320,7 @@ class ReturController extends Controller
                             continue;
                         }
 
-                        $konversiLama = KonversiBarang::where(
-                            'id_barang',
-                            $batchLama->id_barang
-                        )
-                            ->where(
-                                'id_satuan',
-                                $oldDetail->id_satuan
-                            )
-                            ->first();
-
-                        if (!$konversiLama) {
-                            throw ValidationException::withMessages([
-                                'id_satuan' =>
-                                'Konversi satuan pada data retur lama tidak ditemukan.',
-                            ]);
-                        }
-
-                        $jumlahDasarLama = (int) $oldDetail->jumlah_retur * (int) $konversiLama->nilai_konversi;
+                        $jumlahDasarLama = (int) $oldDetail->jumlah_retur * (int) $oldDetail->nilai_konversi;
 
                         $batchLama->increment(
                             'sisa_persediaan',
@@ -590,10 +573,16 @@ class ReturController extends Controller
         return redirect()->route('retur.index')->with('success', 'Retur berhasil diterima!');
     }
 
+    public function pending(string $id_retur)
+    {
+        Retur::where('id_retur', $id_retur)->update(['status' => 'Pending']);
+        return redirect()->route('retur.index')->with('success', 'Status retur berhasil diubah!');
+    }
+
     public function reject(string $id_retur)
     {
         Retur::where('id_retur', $id_retur)->update(['status' => 'Ditolak']);
-        return redirect()->route('retur.index')->with('success', 'Retur ditolak!');
+        return redirect()->route('retur.index')->with('success', 'Retur berhasil ditolak!');
     }
 
     public function cetakPdf(string $id_retur)
@@ -710,20 +699,20 @@ class ReturController extends Controller
 
     public function getPenerimaanDetails(string $id_penerimaan)
     {
-        $penerimaan = Penerimaan::with([
-            'pembelian.detailPembelian.satuan',
-        ])->findOrFail($id_penerimaan);
-
         $details = DetailPenerimaan::with([
-            'batch.barang'
-        ])->where('id_penerimaan', $id_penerimaan)->where('jumlah_ditolak', '>', 0)->get();
+            'batch.barang',
+            'penerimaan.pembelian.detailPembelian.satuan'
+        ])
+            ->where('id_penerimaan', $id_penerimaan)
+            ->where('jumlah_ditolak', '>', 0)
+            ->get();
 
-        $result = $details->map(function ($detail) use ($penerimaan) {
+        $result = $details->map(function ($detail) {
 
             $idBarang = $detail->batch?->id_barang;
 
             /*Cari detail pembelian berdasarkan barang*/
-            $detailPembelian = $penerimaan->pembelian?->detailPembelian->firstWhere('id_barang', $idBarang);
+            $detailPembelian = $detail->penerimaan->pembelian?->detailPembelian->firstWhere('id_barang', $idBarang);
 
             return [
                 'id_detail_penerimaan' => $detail->id_detail_penerimaan,
@@ -751,6 +740,10 @@ class ReturController extends Controller
             'pembelian.supplier',
         ])
             ->where('no_registrasi', 'LIKE', '%' . $search . '%')
+            ->whereHas('detailPenerimaan', function ($query) {
+                $query->where('jumlah_ditolak', '>', 0);
+            })
+            ->whereDoesntHave('retur')
             ->limit(5)
             ->get();
 

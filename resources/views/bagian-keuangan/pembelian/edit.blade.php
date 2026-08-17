@@ -23,7 +23,8 @@
                     <div class="form-group">
                         <label for="tanggal_pembelian" class="text-gray-900">Tanggal Pembelian</label>
                         <input type="date" class="form-control" id="tanggal_pembelian" name="tanggal_pembelian"
-                            value="{{ old('tanggal_pembelian', $pembelian->tanggal_pembelian) }}" required>
+                            value="{{ old('tanggal_pembelian', $pembelian->tanggal_pembelian) }}"
+                            min="{{ $pembelian->tanggal_pembelian }}" required>
                         @error('tanggal_pembelian')
                             <div class="form-text text-danger">{{ $message }}</div>
                         @enderror
@@ -96,6 +97,7 @@
                             <th>Kuantitas</th>
                             <th>Satuan</th>
                             <th>Harga</th>
+                            <th>Diskon</th>
                             <th>Deskripsi</th>
                             <th class="text-center">Aksi</th>
                         </tr>
@@ -193,6 +195,7 @@
                                 <div class="input-group">
                                     <div class="input-group-prepend"><span class="input-group-text">Rp</span></div>
                                         <input type="number" class="form-control" name="harga[]" min="1" step="0.01" placeholder="Masukkan harga" required value="${escapeHtml(data.harga ?? '')}"></div></td>
+                        <td><div class="input-group"><div class="input-group-prepend"><span class="input-group-text">Rp</span></div> <input type="number" class="form-control" name="diskon[]" min="0" step="0.01" placeholder="Jika ada" value="${escapeHtml(data.diskon ?? '')}"></div></td>
                         <td><input type="text" class="form-control" name="deskripsi[]" placeholder="Jika ada" value="${escapeHtml(data.deskripsi ?? '')}"></td>
                         <td class="text-center"><button type="button" class="btn btn-danger btn-sm hapus"><i class="fas fa-trash"></i></button></td>
                     </tr>`);
@@ -215,6 +218,7 @@
                 const oldKuantitas = @json(old('kuantitas', []));
                 const oldSatuan = @json(old('id_satuan', []));
                 const oldHarga = @json(old('harga', []));
+                const oldDiskon = @json(old('diskon', []));
 
                 for (let i = 0; i < oldBarang.length; i++) {
                     createRow({
@@ -223,7 +227,8 @@
                         deskripsi: oldDeskripsi[i] ?? '',
                         kuantitas: oldKuantitas[i] ?? '',
                         id_satuan: oldSatuan[i] ?? '',
-                        harga: oldHarga[i] ?? ''
+                        harga: oldHarga[i] ?? '',
+                        diskon: oldDiskon[i] ?? ''
                     });
                 }
             } else {
@@ -234,7 +239,8 @@
                         deskripsi: item.deskripsi ?? '',
                         kuantitas: item.kuantitas ?? '',
                         id_satuan: item.id_satuan ?? '',
-                        harga: item.harga ?? ''
+                        harga: item.harga ?? '',
+                        diskon: item.diskon ?? ''
                     });
                 });
             }

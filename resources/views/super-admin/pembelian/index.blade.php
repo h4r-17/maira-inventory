@@ -15,10 +15,11 @@
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover text-gray-900" id="tabelData">
-                <thead class="bg-gray-100">
+            <table class="table table-bordered table-striped table-hover text-gray-900" id="tabelData"
+                style="table-layout: fixed;">
+                <thead>
                     <tr>
-                        <th>No</th>
+                        <th style="width: 5%;">No</th>
                         <th>No Nota</th>
                         <th>Tanggal Pembelian</th>
                         <th>Supplier</th>

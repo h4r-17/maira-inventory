@@ -30,8 +30,7 @@
                     <div class="form-group">
                         <label for="tanggal_penolakan" class="text-gray-900">Tanggal Penolakan</label>
                         <input type="date" name="tanggal_penolakan" id="tanggal_penolakan" class="form-control"
-                            min="{{ \Carbon\Carbon::now()->translatedFormat('Y-m-d') }}" placeholder="Tanggal Penolakan"
-                            value="{{ old('tanggal_penolakan') }}" required>
+                            placeholder="Tanggal Penolakan" value="{{ old('tanggal_penolakan') }}" required>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -54,7 +53,7 @@
             </div>
         </div>
     </div>
-    <div class="card shadow">
+    <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between">
             <h6 class="m-0 font-weight-bold text-primary">Detail Penolakan Bahan Baku</h6>
             <button type="button" class="btn btn-primary btn-sm" id="btnTambah"><i class="fas fa-plus"></i>
@@ -126,6 +125,7 @@
                         row.find('.nama-barang').val(ui.item.nama_barang);
                         row.find('.kode-batch-value').val(ui.item.label);
                         row.find('.jumlah-ditolak').attr('max', ui.item.sisa_persediaan);
+                        row.find('.jumlah-ditolak').attr('data-konversi', ui.item.nilai_konversi);
 
                         return false;
                     }
@@ -205,10 +205,11 @@
                                 <td>
                                     <input type="number"
                                         class="form-control jumlah-ditolak"
-                                        min="1000"
+                                        min="1"
                                         name="jumlah_ditolak[]"
                                         placeholder="Masukkan jumlah ditolak"
                                         value="${data.jumlah_ditolak ?? ''}"
+                                        data-konversi="${data.nilai_konversi ?? 1}"
                                         required>
                                 </td>
 
@@ -269,6 +270,8 @@
             const oldAlasanPenolakan = @json(old('alasan_penolakan', []));
             const oldDeskripsi = @json(old('deskripsi', []));
 
+            // Jika ada old values, karena kita tidak punya data konversi dari backend saat reload error,
+            // default ke 1. User tetap divalidasi dari backend jika tidak sesuai.
             if (oldBatchBarang.length > 0) {
                 for (let i = 0; i < oldBatchBarang.length; i++) {
                     addRow({
@@ -279,21 +282,49 @@
                         jumlah_ditolak: oldJumlahDitolak[i] ?? '',
                         alasan_penolakan: oldAlasanPenolakan[i] ?? '',
                         deskripsi: oldDeskripsi[i] ?? '',
+                        nilai_konversi: 1 // Default untuk fallback
                     });
                 }
             }
         });
 
         $('#formPenolakan').submit(function(e) {
+            let isValid = true;
+            let errorMessage = '';
+
             if ($('#detailTableBody tr').length == 0) {
-                $('#error-empty-item').remove();
+                isValid = false;
+                errorMessage += '<li>Minimal satu bahan baku harus ditambahkan.</li>';
+            }
+
+            // Validasi kelipatan konversi jika status = Retur
+            const statusKeputusan = $('#status').val();
+            if (statusKeputusan === 'Retur') {
+                $('#detailTableBody tr').each(function() {
+                    let qty = parseFloat($(this).find('.jumlah-ditolak').val());
+                    let konversi = parseFloat($(this).find('.jumlah-ditolak').attr('data-konversi')) || 1;
+                    let namaBarang = $(this).find('.nama-barang').val();
+
+                    if (qty > 0 && konversi > 0 && qty % konversi !== 0) {
+                        isValid = false;
+                        errorMessage +=
+                            `<li>Jumlah ditolak untuk <b>${namaBarang}</b> harus kelipatan dari nilai konversi (<b>${konversi}</b>).</li>`;
+                    }
+                });
+            }
+
+            $('#error-empty-item').remove();
+            if (!isValid) {
                 $errors = $(
-                    '<div id="error-empty-item" class="alert alert-danger"><strong>Data belum valid!</strong><ul class="mb-0 mt-2 pl-3"><li>Minimal satu bahan baku harus ditambahkan.</li></ul></div>'
+                    '<div id="error-empty-item" class="alert alert-danger"><strong>Data belum valid!</strong><ul class="mb-0 mt-2 pl-3">' +
+                    errorMessage + '</ul></div>'
                 );
                 $(this).prepend($errors);
+                // Scroll ke error message
+                $('html, body').animate({
+                    scrollTop: $("#error-empty-item").offset().top - 20
+                }, 200);
                 return false;
-            } else {
-                $('#error-empty-item').remove();
             }
         });
     </script>

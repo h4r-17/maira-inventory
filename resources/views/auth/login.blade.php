@@ -20,26 +20,23 @@
                                 <span class="fas fa-envelope"></span>
                             </div>
                         </div>
-                        @error('email')
-                            <span class="invalid-feedback" role="alert">
-                                <strong>{{ $message }}</strong>
-                            </span>
-                        @enderror
                     </div>
 
                     <div class="input-group mb-4">
-                        <input type="password" class="form-control @error('password') is-invalid @enderror"
+                        <input type="password"
+                            class="form-control @error('email') is-invalid @enderror @error('password') is-invalid @enderror"
                             placeholder="Password" name="password" id="password" required autocomplete="current-password">
                         <div class="input-group-append">
-                            <div class="input-group-text @error('password') border-danger text-danger @enderror">
+                            <div
+                                class="input-group-text @error('email') border-danger text-danger @enderror @error('password') border-danger text-danger @enderror">
                                 <span class="fas fa-lock"></span>
                             </div>
                         </div>
-                        @error('password')
-                            <span class="invalid-feedback" role="alert">
-                                <strong>{{ $message }}</strong>
+                        @if ($errors->has('email') || $errors->has('password'))
+                            <span class="invalid-feedback" style="display: block;" role="alert">
+                                <strong>Email atau Password salah. Silakan coba lagi!</strong>
                             </span>
-                        @enderror
+                        @endif
                     </div>
 
                     <!-- Ingatkan Saya dan Lupa Sandi- OPSIONAL -->
