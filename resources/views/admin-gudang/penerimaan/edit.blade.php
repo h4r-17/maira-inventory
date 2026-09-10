@@ -329,6 +329,17 @@
                     `);
                 bindAutocomplete(row);
                 $('#detailTableBody').append(row);
+
+                const jumlahMasuk = row.find('.jumlah-masuk');
+                const expired = row.find('input[name="expired_date[]"]');
+
+                function updateExpiredRequired() {
+                    const masuk = Number(jumlahMasuk.val()) || 0;
+                    expired.prop('required', masuk > 0);
+                }
+
+                jumlahMasuk.on('input', updateExpiredRequired);
+                updateExpiredRequired();
             }
 
             $('#btnTambah').click(function() {
@@ -386,17 +397,6 @@
                     });
                 });
             }
-
-            const jumlahMasuk = row.find('.jumlah-masuk');
-            const expired = row.find('input[name="expired_date[]"]');
-
-            function updateExpiredRequired() {
-                const masuk = Number(jumlahMasuk.val()) || 0;
-                expired.prop('required', masuk > 0);
-            }
-
-            jumlahMasuk.on('input', updateExpiredRequired);
-            updateExpiredRequired();
 
             $('#formPenerimaan').submit(function(e) {
                 if ($('#detailTableBody tr').length == 0) {

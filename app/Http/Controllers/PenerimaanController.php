@@ -156,31 +156,17 @@ class PenerimaanController extends Controller
 
                         $jumlahSekarang = $jumlah_masuk + $jumlah_ditolak;
                         $totalSetelahPenerimaan = $jumlahSudahDiproses + $jumlahSekarang;
+                        // bisa nyicil
+                        if ($totalSetelahPenerimaan > $jumlahPembelian) {
+                            $kelebihan = $totalSetelahPenerimaan - $jumlahPembelian;
 
-                        if ($totalSetelahPenerimaan != $jumlahPembelian) {
-                            if ($totalSetelahPenerimaan < $jumlahPembelian) {
-
-                                $kekurangan = $jumlahPembelian - $totalSetelahPenerimaan;
-                                throw ValidationException::withMessages([
-                                    "jumlah_masuk.{$index}" =>
-                                    "Jumlah masuk dan jumlah ditolak belum lengkap. " .
-                                        "Pembelian sebanyak {$jumlahPembelian}, " .
-                                        "sedangkan total yang diproses baru {$totalSetelahPenerimaan}. " .
-                                        "Masih kurang {$kekurangan}."
-                                ]);
-                            }
-
-                            if ($totalSetelahPenerimaan > $jumlahPembelian) {
-                                $kelebihan = $totalSetelahPenerimaan - $jumlahPembelian;
-
-                                throw ValidationException::withMessages([
-                                    "jumlah_masuk.{$index}" =>
-                                    "Jumlah masuk dan jumlah ditolak melebihi jumlah pembelian. " .
-                                        "Pembelian sebanyak {$jumlahPembelian}, " .
-                                        "sedangkan total yang diproses {$totalSetelahPenerimaan}. " .
-                                        "Kelebihan {$kelebihan}."
-                                ]);
-                            }
+                            throw ValidationException::withMessages([
+                                "jumlah_masuk.{$index}" =>
+                                "Jumlah masuk dan jumlah ditolak melebihi jumlah pembelian. " .
+                                    "Pembelian sebanyak {$jumlahPembelian}, " .
+                                    "sedangkan total yang diproses {$totalSetelahPenerimaan}. " .
+                                    "Kelebihan {$kelebihan}."
+                            ]);
                         }
                     } else {
                         $jumlahRetur = \App\Models\DetailRetur::where('id_retur', $validated['id_retur'])
@@ -464,29 +450,11 @@ class PenerimaanController extends Controller
 
                         $sisaPembelian = $jumlahPembelian - $jumlahSudahDiproses;
 
-                        // jumlah edit harus tepat dengan sisa pembelian yang harus diproses
-                        if (
-                            $jumlahSekarang != $sisaPembelian
-                        ) {
-
-                            if (
-                                $jumlahSekarang < $sisaPembelian
-                            ) {
-                                $kekurangan = $sisaPembelian - $jumlahSekarang;
-
-                                throw ValidationException::withMessages([
-                                    "jumlah_masuk.{$index}" => "Jumlah masuk dan jumlah ditolak belum lengkap. " . "Sisa pembelian yang harus diproses: " . "{$sisaPembelian}, " . "sedangkan yang dimasukkan hanya " . "{$jumlahSekarang}. " . "Masih kurang {$kekurangan}."
-                                ]);
-                            }
-
-                            if (
-                                $jumlahSekarang > $sisaPembelian
-                            ) {
-                                $kelebihan = $jumlahSekarang - $sisaPembelian;
-                                throw ValidationException::withMessages([
-                                    "jumlah_masuk.{$index}" => "Jumlah masuk dan jumlah ditolak melebihi sisa pembelian. " . "Sisa pembelian: {$sisaPembelian}, " . "sedangkan yang dimasukkan {$jumlahSekarang}. " . "Kelebihan {$kelebihan}."
-                                ]);
-                            }
+                        if ($jumlahSekarang > $sisaPembelian) {
+                            $kelebihan = $jumlahSekarang - $sisaPembelian;
+                            throw ValidationException::withMessages([
+                                "jumlah_masuk.{$index}" => "Jumlah masuk dan jumlah ditolak melebihi sisa pembelian. " . "Sisa pembelian: {$sisaPembelian}, " . "sedangkan yang dimasukkan {$jumlahSekarang}. " . "Kelebihan {$kelebihan}."
+                            ]);
                         }
                     } else {
                         $jumlahRetur = \App\Models\DetailRetur::where('id_retur', $newReturId)
@@ -496,7 +464,7 @@ class PenerimaanController extends Controller
 
                         if ($jumlahSekarang > $jumlahRetur) {
                             $kelebihan = $jumlahSekarang - $jumlahRetur;
-                            
+
                             throw ValidationException::withMessages([
                                 "jumlah_masuk.{$index}" =>
                                 "Jumlah masuk dan jumlah ditolak melebihi jumlah yang diretur. " .
@@ -756,7 +724,7 @@ class PenerimaanController extends Controller
             'detailPembelian.satuan'
         ])
             ->where('no_nota', 'LIKE', '%' . $request->term . '%')
-            ->whereDoesntHave('penerimaan')->limit(5)->latest()->get();
+            ->latest()->get();
 
         $result = $pembelian->map(function ($p) {
 
@@ -810,7 +778,14 @@ class PenerimaanController extends Controller
                     ];
                 })->values(),
             ];
-        })->values();
+        })->filter(function ($p) {
+            foreach ($p['details'] as $detail) {
+                if ($detail['jumlah_sisa'] > 0) {
+                    return true;
+                }
+            }
+            return false;
+        })->take(5)->values();
 
         return response()->json($result);
     }

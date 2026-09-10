@@ -24,6 +24,7 @@
                         <th>Tanggal Produksi</th>
                         <th>Nama Produk</th>
                         <th>Hasil Produksi</th>
+                        <th>Hasil Lolos QC</th>
                         <th>Produk Expired</th>
                         <th>Aksi</th>
                     </tr>
@@ -37,6 +38,7 @@
                             </td>
                             <td>{{ $item->barangJadi->nama_produk }}</td>
                             <td>{{ $item->hasil_produksi }} PCS</td>
+                            <td>{{ $item->hasil_qc }} PCS</td>
                             <td>{{ \Carbon\Carbon::parse($item->produk_expired)->format('d-m-Y') }}</td>
                             <td>
                                 <a href="{{ route('produksi.show', $item->id_produksi) }}"

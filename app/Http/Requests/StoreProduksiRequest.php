@@ -27,6 +27,7 @@ class StoreProduksiRequest extends FormRequest
             'batch_produk' => 'required|min:5|max:50',
             'id_produk' => 'required|exists:barang_jadi,id_produk',
             'hasil_produksi' => 'required|numeric|min:1',
+            'hasil_qc' => 'required|numeric|min:1',
             'tujuan_produksi' => 'required|min:3|max:50',
             'id_barang' => 'required|array|min:1',
             'id_barang.*' => 'required|exists:barang,id_barang',
@@ -37,11 +38,11 @@ class StoreProduksiRequest extends FormRequest
         ];
 
         if ($this->isMethod('POST')) {
-            $rules['tanggal_produksi'] = 'required|date|after_or_equal:today';
-            $rules['produk_expired'] = 'required|date|after_or_equal:' . date('Y-m-d', strtotime('+1 year'));
+            $rules['tanggal_produksi'] = 'required|date|after_or_equal:' . date('Y-m-d', strtotime('-5 days'));
+            $rules['produk_expired'] = 'required|date|after_or_equal:' . date('Y-m-d', strtotime('+11 months'));
         } else {
             $produksi = Produksi::findOrFail($id_produksi);
-            $rules['tanggal_produksi'] = 'required|date|after_or_equal:' . $produksi->tanggal_produksi;
+            $rules['tanggal_produksi'] = 'required|date|after_or_equal:' . \Carbon\Carbon::now()->subDays(5)->min($produksi->tanggal_produksi)->format('Y-m-d');
             $rules['produk_expired'] = 'required|date|after_or_equal:date' . $produksi->produk_expired;
         }
 
@@ -62,6 +63,9 @@ class StoreProduksiRequest extends FormRequest
             'hasil_produksi.required' => 'Hasil produksi wajib diisi',
             'hasil_produksi.numeric' => 'Hasil produksi harus berupa angka',
             'hasil_produksi.min' => 'Hasil produksi minimal :min',
+            'hasil_qc.required' => 'Hasil QC produk wajib diisi',
+            'hasil_qc.numeric' => 'Hasil QC produk harus berupa angka',
+            'hasil_qc.min' => 'Hasil QC produk minimal :min',
             'produk_expired.required' => 'Tanggal expired wajib diisi',
             'produk_expired.date' => 'Format tanggal expired tidak valid',
             'produk_expired.after' => 'Tanggal expired minimal 1 tahun dari hari ini (minimal tanggal ' . date('d-m-Y', strtotime('+1 year')) . ')',

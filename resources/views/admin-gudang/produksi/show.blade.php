@@ -51,6 +51,11 @@
                     <div class="font-weight-bold text-gray-900">{{ $produksi->hasil_produksi }} PCS</div>
                 </div>
                 <div class="col-md-2 mb-3 mb-md-0">
+                    <div class="text-dark small">Hasil Lolos QC</div>
+                    <div class="font-weight-bold text-gray-900">
+                        {{ $produksi->hasil_qc }} PCS</div>
+                </div>
+                <div class="col-md-2 mb-3 mb-md-0">
                     <div class="text-dark small">Tujuan Produksi</div>
                     <div class="font-weight-bold text-gray-900">{{ $produksi->tujuan_produksi }}</div>
                 </div>

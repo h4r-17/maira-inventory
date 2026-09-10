@@ -26,6 +26,16 @@
                         <input type="number" class="form-control" id="hasil_produksi" name="hasil_produksi"
                             placeholder="Masukkan hasil produksi produk" min="1"
                             value="{{ old('hasil_produksi') }}" required>
+                        <small id="estimasi_produksi" class="form-text text-info font-weight-bold"></small>
+                        <div id="bahan_kurang_container" class="mt-2 text-danger small" style="display:none;"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="hasil_qc" class="text-gray-900">Jumlah Diterima (Lolos QC)</label>
+                        <input type="number" class="form-control" id="hasil_qc" name="hasil_qc"
+                            placeholder="Masukkan jumlah produk yang lolos" min="1" value="{{ old('hasil_qc') }}"
+                            required>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -53,8 +63,8 @@
                     <div class="form-group">
                         <label for="tanggal_produksi" class="text-gray-900">Tanggal Produksi</label>
                         <input type="date" class="form-control" id="tanggal_produksi" name="tanggal_produksi"
-                            min="{{ date('Y-m-d') }}" placeholder="Masukkan tanggal produksi"
-                            value="{{ old('tanggal_produksi') }}" required>
+                            min="{{ \Carbon\Carbon::now()->subDays(5)->format('Y-m-d') }}"
+                            placeholder="Masukkan tanggal produksi" value="{{ old('tanggal_produksi') }}" required>
                         @error('tanggal_produksi')
                             <div class="form-text text-danger">{{ $message }}</div>
                         @enderror
@@ -63,7 +73,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label for="produk_expired" class="text-gray-900">Produk Expired</label>
-                        <input type="date" class="form-control" min="{{ date('Y-m-d', strtotime('+1 year')) }}"
+                        <input type="date" class="form-control" min="{{ date('Y-m-d', strtotime('+11 months')) }}"
                             id="produk_expired" name="produk_expired" value="{{ old('produk_expired') }}" required>
                         @error('produk_expired')
                             <div class="form-text text-danger">{{ $message }}</div>
@@ -176,6 +186,14 @@
                                 <input type="hidden"
                                     class="standar_kuantitas"
                                     value="${data.standar_kuantitas ?? ''}">
+
+                                <input type="hidden"
+                                    class="total_stok"
+                                    value="${data.total_stok ?? 0}">
+                                    
+                                <input type="hidden"
+                                    class="kode_satuan"
+                                    value="${data.kode_satuan ?? ''}">
                             </td>
 
                             <td>
@@ -264,6 +282,35 @@
                 $('#formProduksi').prepend(errorBox);
             }
 
+            function checkBahanBakuSufficient() {
+                const hasilProduksi = parseInt($('#hasil_produksi').val()) || 0;
+                let bahanKurang = [];
+
+                $('#detailTableBody tr').each(function() {
+                    const row = $(this);
+                    const namaBarang = row.find('.nama_barang').val();
+                    const standarKuantitas = parseFloat(row.find('.standar_kuantitas').val()) || 0;
+                    const totalStok = parseFloat(row.find('.total_stok').val()) || 0;
+                    const kodeSatuan = row.find('.kode_satuan').val();
+
+                    const jumlahKeluar = standarKuantitas * hasilProduksi;
+
+                    if (jumlahKeluar > totalStok) {
+                        const kurang = jumlahKeluar - totalStok;
+                        // Format ke maksimal 2 angka desimal untuk menghindari angka panjang
+                        const kurangFormatted = Number.isInteger(kurang) ? kurang : kurang.toFixed(2);
+                        bahanKurang.push(`- ${namaBarang} (Kurang: ${kurangFormatted} ${kodeSatuan})`);
+                    }
+                });
+
+                if (bahanKurang.length > 0) {
+                    $('#bahan_kurang_container').html(
+                        `<strong>Bahan baku kurang:</strong><br>${bahanKurang.join('<br>')}`).show();
+                } else {
+                    $('#bahan_kurang_container').hide().empty();
+                }
+            }
+
             // event listener untuk menghitung jumlah keluar berdasarkan hasil produksi
             $('#hasil_produksi').on('input', function() {
                 const hasilProduksi = parseInt($(this).val()) || 0;
@@ -278,6 +325,7 @@
 
                 $('#batch_suffix').text('-' + (hasilProduksi || '0'));
                 updateBatchProduk();
+                checkBahanBakuSufficient();
             });
 
             function renderRecipeRows(rows) {
@@ -285,23 +333,47 @@
 
                 if (!rows.length) {
                     showClientError('Resep produksi untuk produk ini belum tersedia.');
+                    $('#estimasi_produksi').text('');
+                    $('#hasil_produksi').removeAttr('max');
                     return;
                 }
 
                 $('#error-empty-item').remove();
                 const hasilProduksi = parseInt($('#hasil_produksi').val()) || 1;
 
+                let minEstimasi = Infinity;
+
                 // Render seluruh baris ke HTML tanpa interupsi pagination di tengah-tengah loop
                 rows.forEach(function(item) {
                     const jumlahKeluar = item.standar_kuantitas * hasilProduksi;
+
+                    if (item.total_stok !== undefined && item.standar_kuantitas > 0) {
+                        const estimasiBahan = Math.floor(item.total_stok / item.standar_kuantitas);
+                        if (estimasiBahan < minEstimasi) {
+                            minEstimasi = estimasiBahan;
+                        }
+                    }
 
                     addRow({
                         id_barang: item.id_barang,
                         nama_barang: item.nama_barang,
                         standar_kuantitas: item.standar_kuantitas,
-                        jumlah_keluar: jumlahKeluar
+                        jumlah_keluar: jumlahKeluar,
+                        total_stok: item.total_stok,
+                        kode_satuan: item.kode_satuan
                     });
                 });
+
+                if (minEstimasi !== Infinity) {
+                    $('#estimasi_produksi').html(
+                        `Estimasi maksimal produksi: <span class="text-danger">${minEstimasi}</span>`);
+                    $('#hasil_produksi').attr('max', minEstimasi);
+                } else {
+                    $('#estimasi_produksi').text('');
+                    $('#hasil_produksi').removeAttr('max');
+                }
+
+                checkBahanBakuSufficient();
 
                 // PERUBAHAN: Terapkan pembagian halaman sekali saja di akhir setelah data AJAX siap
                 currentPage = 1;

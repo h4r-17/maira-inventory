@@ -123,6 +123,11 @@
             <td>:</td>
             <td>{{ $produksi->tujuan_produksi }}</td>
         </tr>
+        <tr>
+            <td><strong>Hasil Lolos QC</strong></td>
+            <td>:</td>
+            <td>{{ $produksi->hasil_qc }} PCS</td>
+        </tr>
     </table>
     <table class="data-table">
         <thead>

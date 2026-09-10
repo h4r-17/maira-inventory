@@ -62,7 +62,8 @@
                         <input type="date" class="form-control" id="tanggal_produksi" name="tanggal_produksi"
                             placeholder="Masukkan tanggal produksi"
                             value="{{ old('tanggal_produksi', $produksi->tanggal_produksi) }}"
-                            min="{{ isset($produksi) ? $produksi->tanggal_produksi : date('Y-m-d') }}" required>
+                            min="{{ \Carbon\Carbon::now()->subDays(5)->min($produksi->tanggal_produksi)->format('Y-m-d') }}"
+                            required>
                         @error('tanggal_produksi')
                             <div class="form-text text-danger">{{ $message }}</div>
                         @enderror
@@ -78,11 +79,19 @@
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
+                        <label for="hasil_qc" class="text-gray-900">Jumlah Diterima (Lolos QC)</label>
+                        <input type="number" class="form-control" id="hasil_qc" name="hasil_qc"
+                            placeholder="Masukkan jumlah produk yang lolos" min="1"
+                            value="{{ old('hasil_qc', $produksi->hasil_qc) }}" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
                         <label for="produk_expired" class="text-gray-900">Produk Expired</label>
                         <input type="date" class="form-control" id="produk_expired" name="produk_expired"
-                            min="{{ date('Y-m-d', strtotime('+1 year')) }}"
+                            min="{{ date('Y-m-d', strtotime('+11 months')) }}"
                             placeholder="Masukkan tanggal expired produk"
-                            value="{{ old('produk_expired', $produksi->produk_expired) ?? date('Y-m-d', strtotime('+1 year')) }}"
+                            value="{{ old('produk_expired', $produksi->produk_expired) ?? date('Y-m-d', strtotime('+11 months')) }}"
                             required>
                         @error('produk_expired')
                             <div class="form-text text-danger">{{ $message }}</div>

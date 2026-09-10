@@ -89,6 +89,7 @@ class ProduksiController extends Controller
                 'tanggal_produksi' => $validated['tanggal_produksi'],
                 'id_produk' => $validated['id_produk'],
                 'hasil_produksi' => $validated['hasil_produksi'],
+                'hasil_qc' => $validated['hasil_qc'],
                 'produk_expired' => $validated['produk_expired'],
                 'tujuan_produksi' => $validated['tujuan_produksi'],
             ]);
@@ -199,6 +200,7 @@ class ProduksiController extends Controller
                 'tanggal_produksi' => $validated['tanggal_produksi'],
                 'id_produk' => $validated['id_produk'],
                 'hasil_produksi' => $validated['hasil_produksi'],
+                'hasil_qc' => $validated['hasil_qc'],
                 'produk_expired' => $validated['produk_expired'],
                 'tujuan_produksi' => $validated['tujuan_produksi'],
             ]);
@@ -365,6 +367,7 @@ class ProduksiController extends Controller
                 'barang.nama_barang',
                 'satuan.id_satuan',
                 'satuan.kode_satuan',
+                DB::raw('(SELECT COALESCE(SUM(sisa_persediaan), 0) FROM batch_barang WHERE batch_barang.id_barang = resep_produksi.id_barang) as total_stok')
             )
             ->where('resep_produksi.id_produk', $id_produk)
             ->orderBy('barang.nama_barang')

@@ -14,6 +14,7 @@ class Produksi extends Model
         'tanggal_produksi',
         'id_produk',
         'hasil_produksi',
+        'hasil_qc',
         'produk_expired',
         'tujuan_produksi',
     ];
